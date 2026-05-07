@@ -19,11 +19,9 @@ gzip Country.mmdb
 mv Country.mmdb.gz ./ClashFX/Resources/Country.mmdb.gz
 echo "install dashboard"
 cd ClashFX/Resources
-if ! git clone --depth 1 -b gh-pages https://github.com/MetaCubeX/metacubexd.git dashboard 2>/dev/null; then
-    echo "Warning: Failed to clone dashboard, creating placeholder"
-    mkdir -p dashboard
-    echo "<html><body><h1>Dashboard not available</h1></body></html>" > dashboard/index.html
-fi
+curl -LO https://github.com/Zephyruso/zashboard/releases/latest/download/dist.zip
+unzip dist.unzip
+mv dist dashboard
 
 if [ -d "dashboard/.git" ]; then
     cd dashboard

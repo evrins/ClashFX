@@ -35,3 +35,4 @@ gitupdate.bat
 # Swift Package Manager
 ClashFX.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved
 build_output/
+Podfile.lock
