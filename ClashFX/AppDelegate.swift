@@ -176,13 +176,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         } else {
             Logger.log("do not setup built in logger/traffic, useDirectApi = false")
         }
-        if Settings.enhancedMode {
-            Logger.log("Cleaning up stale mihomo_core from previous session", level: .warning)
-            PrivilegedHelperManager.shared.helper()?.stopMihomoCore { _ in }
-            // Don't reset Settings.enhancedMode here — restoreEnhancedModeIfNeeded()
-            // will read it and properly re-enable enhanced mode after the built-in core starts.
-            Thread.sleep(forTimeInterval: 0.5)
-        }
+        cleanupStaleMihomoCoreOnLaunch()
 
         // start proxy
         Logger.log("initClashCore")
@@ -1110,6 +1104,28 @@ extension AppDelegate {
             return servers.compactMap { $0 as? String }
         }
         return []
+    }
+
+    private func cleanupStaleMihomoCoreOnLaunch() {
+        guard Settings.enhancedMode else { return }
+        Logger.log("Cleanup stale mihomo_core from previous session", level: .info)
+        guard let binaryPath = Bundle.main.path(forResource: "mihomo_core", ofType: nil) else { return }
+        let semaphore = DispatchSemaphore(value: 0)
+        guard let helper = PrivilegedHelperManager.shared.helper(failture: {
+            semaphore.signal()
+        }) else { return }
+
+        helper.cleanupMihomoCore(
+            withBinaryPath: binaryPath,
+            configPath: kConfigFolderPath + ".enhanced_config.yaml",
+            homeDir: kConfigFolderPath
+        ) { error in
+            if let error = error {
+                Logger.log("Stale mihomo_core cleanup failed: \(error)", level: .warning)
+            }
+            semaphore.signal()
+        }
+        _ = semaphore.wait(timeout: .now() + 3.0)
     }
 
     private func restoreEnhancedModeIfNeeded() {

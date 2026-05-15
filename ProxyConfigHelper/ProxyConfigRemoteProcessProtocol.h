@@ -42,6 +42,11 @@ typedef void(^dictReplyBlock)(NSDictionary *);
 
 - (void)stopMihomoCoreWithReply:(stringReplyBlock)reply;
 
+- (void)cleanupMihomoCoreWithBinaryPath:(NSString *)binaryPath
+                             configPath:(NSString *)configPath
+                                homeDir:(NSString *)homeDir
+                                  reply:(stringReplyBlock)reply;
+
 // DNS override for TUN mode
 - (void)overrideDNSWithServers:(NSArray<NSString *> *)servers
                filterInterface:(BOOL)filterInterface

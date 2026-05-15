@@ -9,6 +9,7 @@
 #import "ProxyConfigHelper.h"
 #import <AppKit/AppKit.h>
 #import <Security/Security.h>
+#import <signal.h>
 #import "ProxyConfigRemoteProcessProtocol.h"
 #import "ProxySettingTool.h"
 
@@ -36,6 +37,90 @@ ProxyConfigRemoteProcessProtocol
         self.listener.delegate = self;
     }
     return self;
+}
+
+- (NSArray<NSNumber *> *)mihomoProcessIDsMatchingBinaryPath:(NSString *)binaryPath
+                                                 configPath:(NSString *)configPath
+                                                    homeDir:(NSString *)homeDir {
+    NSTask *task = [[NSTask alloc] init];
+    task.executableURL = [NSURL fileURLWithPath:@"/bin/ps"];
+    task.arguments = @[@"-axww", @"-o", @"pid=,args="];
+
+    NSPipe *pipe = [NSPipe pipe];
+    task.standardOutput = pipe;
+    NSError *error = nil;
+    if (![task launchAndReturnError:&error]) {
+        NSLog(@"mihomo cleanup ps failed: %@", error.localizedDescription);
+        return @[];
+    }
+
+    NSData *data = [[pipe fileHandleForReading] readDataToEndOfFile];
+    [task waitUntilExit];
+    NSString *output = [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding] ?: @"";
+    NSMutableArray<NSNumber *> *pids = [NSMutableArray array];
+    NSCharacterSet *whitespace = [NSCharacterSet whitespaceAndNewlineCharacterSet];
+
+    for (NSString *line in [output componentsSeparatedByCharactersInSet:[NSCharacterSet newlineCharacterSet]]) {
+        NSString *trimmed = [line stringByTrimmingCharactersInSet:whitespace];
+        if (trimmed.length == 0) {
+            continue;
+        }
+
+        NSScanner *scanner = [NSScanner scannerWithString:trimmed];
+        int pid = 0;
+        if (![scanner scanInt:&pid] || pid <= 0) {
+            continue;
+        }
+
+        NSString *args = [trimmed substringFromIndex:scanner.scanLocation];
+        BOOL matchesClashFXCore = [args containsString:binaryPath] &&
+            [args containsString:@" -f "] &&
+            [args containsString:configPath] &&
+            [args containsString:@" -d "] &&
+            [args containsString:homeDir];
+        if (matchesClashFXCore) {
+            [pids addObject:@(pid)];
+        }
+    }
+
+    return pids;
+}
+
+- (BOOL)isProcessRunning:(pid_t)pid {
+    return kill(pid, 0) == 0;
+}
+
+- (void)cleanupMihomoCoreWithBinaryPath:(NSString *)binaryPath
+                             configPath:(NSString *)configPath
+                                homeDir:(NSString *)homeDir
+                                  reply:(stringReplyBlock)reply {
+    dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
+        NSArray<NSNumber *> *pids = [self mihomoProcessIDsMatchingBinaryPath:binaryPath
+                                                                  configPath:configPath
+                                                                     homeDir:homeDir];
+        for (NSNumber *pidNumber in pids) {
+            pid_t pid = pidNumber.intValue;
+            kill(pid, SIGTERM);
+        }
+
+        [NSThread sleepForTimeInterval:1.0];
+
+        NSSet<NSNumber *> *stillMatchedPids = [NSSet setWithArray:[self mihomoProcessIDsMatchingBinaryPath:binaryPath
+                                                                                                configPath:configPath
+                                                                                                   homeDir:homeDir]];
+
+        for (NSNumber *pidNumber in pids) {
+            pid_t pid = pidNumber.intValue;
+            if ([stillMatchedPids containsObject:pidNumber] && [self isProcessRunning:pid]) {
+                kill(pid, SIGKILL);
+            }
+        }
+
+        if (pids.count > 0) {
+            NSLog(@"Cleaned up %lu ClashFX mihomo_core process(es)", (unsigned long)pids.count);
+        }
+        reply(nil);
+    });
 }
 
 - (void)run {

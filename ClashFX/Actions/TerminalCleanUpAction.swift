@@ -44,7 +44,15 @@ enum TerminalConfirmAction {
         }
 
         if let statusItem = AppDelegate.shared.statusItem, statusItem.menu != nil {
-            statusItem.menu = nil
+            let quittingMenu = NSMenu()
+            let quittingItem = NSMenuItem(
+                title: NSLocalizedString("Quitting…", comment: ""),
+                action: nil,
+                keyEquivalent: ""
+            )
+            quittingItem.isEnabled = false
+            quittingMenu.addItem(quittingItem)
+            statusItem.menu = quittingMenu
         }
         AppDelegate.shared.disposeBag = DisposeBag()
 
