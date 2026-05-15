@@ -20,7 +20,7 @@ mv Country.mmdb.gz ./ClashFX/Resources/Country.mmdb.gz
 echo "install dashboard"
 cd ClashFX/Resources
 curl -LO https://github.com/Zephyruso/zashboard/releases/latest/download/dist.zip
-unzip dist.unzip
+unzip dist.zip
 mv dist dashboard
 
 if [ -d "dashboard/.git" ]; then
