@@ -13,7 +13,7 @@ class AutoUpgradeManager: NSObject {
 
     override private init() {
         updaterController = SPUStandardUpdaterController(
-            startingUpdater: true,
+            startingUpdater: false,
             updaterDelegate: nil,
             userDriverDelegate: nil
         )
