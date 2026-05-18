@@ -1,0 +1,784 @@
+<?xml version="1.0" encoding="utf-8"?>
+<rss version="2.0" xmlns:sparkle="http://www.andymatuschak.org/xml-namespaces/sparkle" xmlns:dc="http://purl.org/dc/elements/1.1/">
+  <channel>
+    <title>ClashFX</title>
+    <link>https://clash-fx.github.io/ClashFX/appcast.xml</link>
+    <description>Most recent ClashFX updates</description>
+    <language>en</language>
+    <item>
+  <title>Version 1.0.35</title>
+  <description><![CDATA[
+    <h2>ClashFX v1.0.35</h2><ul><li><strong>Enhanced Mode Startup Readiness Hardened</strong> — Enhanced Mode now waits until `/configs` reports a usable `mixed-port` or `port` before treating the external mihomo core as ready, avoiding the misleading "Ports Open Fail" popup when mihomo is already listening. (#75)</li><li><strong>Transient Port-Zero Retry</strong> — ClashFX now retries `/configs` responses that temporarily report `port=0`, and reissues the request if the active API/config context changes during the retry window. (#75)</li><li><strong>Enhanced Mode Tray Highlight</strong> — The menu bar icon now lights up when Enhanced Mode is active, even if the system proxy toggle is off. (#75)</li></ul>
+  ]]></description>
+  <pubDate>Mon, 18 May 2026 04:27:10 +0000</pubDate>
+  <sparkle:version>1.0.35</sparkle:version>
+  <sparkle:shortVersionString>1.0.35</sparkle:shortVersionString>
+  <sparkle:minimumSystemVersion>10.14</sparkle:minimumSystemVersion>
+  <enclosure
+    url="https://github.com/Clash-FX/ClashFX/releases/download/1.0.35/ClashFX.dmg"
+    sparkle:version="1.0.35"
+    sparkle:shortVersionString="1.0.35"
+    sparkle:edSignature="52HBHp84BI7GNGrGHimcZQfZM0ZKSyC39cfXw1Bikb+PYiKtqkcEeE2XhQaK+uBNYR3xidqn5cJJDM82XEMoBA=="
+    length="90978641"
+    type="application/octet-stream"
+  />
+</item>
+    <item>
+  <title>Version 1.0.34</title>
+  <description><![CDATA[
+    <h2>ClashFX v1.0.34</h2><ul><li><strong>Reliable Enhanced Mode Port Resolution</strong> — `clashWriteEnhancedConfig` now promotes any user-configured `port` or `socks-port` into `mixed-port` and only falls back to `7890` when nothing is configured, eliminating the "Ports Open Fail" popup for source configs that omit explicit port fields. (#75)</li><li><strong>Actionable Port-Open Failure Alert</strong> — The startup error now describes the real cause (mixed-port and port both 0) and embeds the last lines of `~/.config/clashfx/.mihomo_core.log`; the "Edit Config" button opens the active `.enhanced_config.yaml` when Enhanced Mode is on. (#75)</li><li><strong>Corrected Configuration Path Documentation</strong> — READMEs and the bug report template now reference `~/.config/clashfx` instead of the legacy `~/.config/clash`. (#75)</li></ul>
+  ]]></description>
+  <pubDate>Fri, 15 May 2026 11:29:29 +0000</pubDate>
+  <sparkle:version>1.0.34</sparkle:version>
+  <sparkle:shortVersionString>1.0.34</sparkle:shortVersionString>
+  <sparkle:minimumSystemVersion>10.14</sparkle:minimumSystemVersion>
+  <enclosure
+    url="https://github.com/Clash-FX/ClashFX/releases/download/1.0.34/ClashFX.dmg"
+    sparkle:version="1.0.34"
+    sparkle:shortVersionString="1.0.34"
+    sparkle:edSignature="ADf8cd6rQmfDSKhDa+gwBXSJ90FlwTGDphGPafqZnFVTTncChM/FoOTQdtZUI8JRWy9PLmdMR8KLarF05M9cCQ=="
+    length="90915478"
+    type="application/octet-stream"
+  />
+</item>
+    <item>
+  <title>Version 1.0.33</title>
+  <description><![CDATA[
+    <h2>ClashFX v1.0.33</h2><ul><li><strong>Selected Subscription Restored on Relaunch</strong> — ClashFX now keeps the selected remote subscription/config visible after restart instead of temporarily falling back to `config` while the core is stopped. (#75)</li><li><strong>Enhanced Mode Startup Recovery Hardened</strong> — Startup cleanup now targets only ClashFX-owned stale `mihomo_core` processes and avoids killing unrelated mihomo processes on the system. (#75)</li><li><strong>Quit Menu Remains Responsive</strong> — During quit-time proxy/Enhanced Mode cleanup, the menu bar item now shows a disabled “Quitting…” menu instead of appearing unresponsive. (#75)</li></ul>
+  ]]></description>
+  <pubDate>Thu, 14 May 2026 11:18:47 +0000</pubDate>
+  <sparkle:version>1.0.33</sparkle:version>
+  <sparkle:shortVersionString>1.0.33</sparkle:shortVersionString>
+  <sparkle:minimumSystemVersion>10.14</sparkle:minimumSystemVersion>
+  <enclosure
+    url="https://github.com/Clash-FX/ClashFX/releases/download/1.0.33/ClashFX.dmg"
+    sparkle:version="1.0.33"
+    sparkle:shortVersionString="1.0.33"
+    sparkle:edSignature="DfEtT93yq8Rc6niZ7z7VZjBFZ1Jpcblh0eLKyV0V0LSCDbITEwSa9BjG+sngHGT/phlElcxWRKRoWc+RO+eCDA=="
+    length="90966142"
+    type="application/octet-stream"
+  />
+</item>
+    <item>
+  <title>Version 1.0.32</title>
+  <description><![CDATA[
+    <h2>ClashFX v1.0.32</h2><ul><li><strong>WireGuard Proxy Loading Fixed</strong> — Configs containing WireGuard proxies failed to load with `create WireGuard device: gVisor is not included in this build, rebuild with -tags with_gvisor`. The embedded mihomo core was built without the `with_gvisor` build tag required by mihomo's userspace WireGuard implementation; the standalone `mihomo_core` binary already had it, but the c-archive linked into the main app process did not. Thanks @DareYouS. (#70, #71)</li></ul>
+  ]]></description>
+  <pubDate>Thu, 07 May 2026 03:08:24 +0000</pubDate>
+  <sparkle:version>1.0.32</sparkle:version>
+  <sparkle:shortVersionString>1.0.32</sparkle:shortVersionString>
+  <sparkle:minimumSystemVersion>10.14</sparkle:minimumSystemVersion>
+  <enclosure
+    url="https://github.com/Clash-FX/ClashFX/releases/download/1.0.32/ClashFX.dmg"
+    sparkle:version="1.0.32"
+    sparkle:shortVersionString="1.0.32"
+    sparkle:edSignature="npwrgBdnLEjPEFl64bQS1upSunFEo+ZrtKJTjTD87ENdA1jKAL1KCz8hfZcd2B25MhoXQ/OXHv1laLQR4F0OAA=="
+    length="91002858"
+    type="application/octet-stream"
+  />
+</item>
+    <item>
+  <title>Version 1.0.31</title>
+  <description><![CDATA[
+    <h2>ClashFX v1.0.31</h2><ul><li><strong>System Proxy Toggle Restored</strong> — The privileged helper now accepts ad-hoc signed clients again, so toggling system proxy from the menu bar works and the helper install dialog no longer loops. Regression introduced in v1.0.30 by the strict XPC code-signature check; bundle-ID validation is preserved. Thanks @agentforhuan for the detailed report. (#65, #68)</li><li><strong>GEOIP Database Update Fixed</strong> — `Debug → Update GEOIP Database` now succeeds. The default download URL was pointing to mihomo's proprietary metadb format which the verifier rejected, causing every update to fail with "Database verify fail" and silently fall back to the bundled database. Thanks @qgdsdfq8xv-a11y. (#66, #67)</li></ul>
+  ]]></description>
+  <pubDate>Tue, 05 May 2026 09:08:26 +0000</pubDate>
+  <sparkle:version>1.0.31</sparkle:version>
+  <sparkle:shortVersionString>1.0.31</sparkle:shortVersionString>
+  <sparkle:minimumSystemVersion>10.14</sparkle:minimumSystemVersion>
+  <enclosure
+    url="https://github.com/Clash-FX/ClashFX/releases/download/1.0.31/ClashFX.dmg"
+    sparkle:version="1.0.31"
+    sparkle:shortVersionString="1.0.31"
+    sparkle:edSignature="mkLD9SxPcrAzYtFt2WSLtp0+yjUIoGfI/QQqaWnqpXe3lkehDEjswyQRdlbPgz8CD3xCB/gXYhjILkLBzIx8Bw=="
+    length="89062865"
+    type="application/octet-stream"
+  />
+</item>
+    <item>
+  <title>Version 1.0.30</title>
+  <description><![CDATA[
+    <h2>ClashFX v1.0.30</h2><ul><li><strong>Legacy Config Fallback Rule Repair</strong> — On launch, ClashFX now repairs already-written generated share-link compatibility configs that still contain `MATCH,Auto`, rewriting their fallback rule to `MATCH,Proxy` so manual proxy selections take effect for fallback traffic without waiting for the next remote refresh. Runs once per user, only on ClashFX-generated configs. (Thanks @YangYongAn — #59)</li><li><strong>Restored Selection Connection Cleanup</strong> — When saved proxy selections are automatically restored on config reload, existing connections are now closed once after all selections are applied so new traffic uses the restored route immediately. (#59)</li></ul>
+  ]]></description>
+  <pubDate>Tue, 05 May 2026 00:58:48 +0000</pubDate>
+  <sparkle:version>1.0.30</sparkle:version>
+  <sparkle:shortVersionString>1.0.30</sparkle:shortVersionString>
+  <sparkle:minimumSystemVersion>10.14</sparkle:minimumSystemVersion>
+  <enclosure
+    url="https://github.com/Clash-FX/ClashFX/releases/download/1.0.30/ClashFX.dmg"
+    sparkle:version="1.0.30"
+    sparkle:shortVersionString="1.0.30"
+    sparkle:edSignature="EUzNIIXnxE7JP1GV8B3aZp4sq1x1Vl0qheWF53PzAI2nhRVKz+i8i9ZgVwZi+GCuwqjBQZoXN7USAs+HlqksBA=="
+    length="89007598"
+    type="application/octet-stream"
+  />
+</item>
+    <item>
+  <title>Version 1.0.29</title>
+  <description><![CDATA[
+    <h2>ClashFX v1.0.29</h2><ul><li><strong>Legacy Config Fallback Rule Repair</strong> — On launch, ClashFX now repairs already-written generated share-link compatibility configs that still contain `MATCH,Auto`, rewriting their fallback rule to `MATCH,Proxy` so manual proxy selections take effect for fallback traffic without waiting for the next remote refresh. Runs once per user, only on ClashFX-generated configs. (Thanks @YangYongAn — #59)</li><li><strong>Restored Selection Connection Cleanup</strong> — When saved proxy selections are automatically restored on config reload, existing connections are now closed once after all selections are applied so new traffic uses the restored route immediately. (#59)</li></ul>
+  ]]></description>
+  <pubDate>Fri, 01 May 2026 04:22:38 +0000</pubDate>
+  <sparkle:version>1.0.29</sparkle:version>
+  <sparkle:shortVersionString>1.0.29</sparkle:shortVersionString>
+  <sparkle:minimumSystemVersion>10.14</sparkle:minimumSystemVersion>
+  <enclosure
+    url="https://github.com/Clash-FX/ClashFX/releases/download/1.0.29/ClashFX.dmg"
+    sparkle:version="1.0.29"
+    sparkle:shortVersionString="1.0.29"
+    sparkle:edSignature="zuzYfXMyDgvL5PYnjElAHAY0AmONhGvRkSa44p/EI4giPb5Xr0K63q3ts+vaubFEsRm/5uPP5Uo10WdcbN9cBg=="
+    length="89001192"
+    type="application/octet-stream"
+  />
+</item>
+    <item>
+  <title>Version 1.0.28</title>
+  <description><![CDATA[
+    <h2>ClashFX v1.0.28</h2><ul><li><strong>Subscription Status at Top of Tray Menu</strong> — When the active config is a remote subscription with traffic / expiry data, a dedicated row at the very top of the menu shows the config name, remaining traffic, and expiry. The row hides itself when no subscription metadata is available, so the menu shape is unchanged for users without remote configs.</li><li><strong>Subscription-Userinfo Parsing</strong> — ClashFX now reads the standard `Subscription-Userinfo` HTTP response header (`upload`, `download`, `total`, `expire`) when refreshing remote configs, with fallback parsing of metadata embedded in subscription bodies (e.g. `剩余流量`, `套餐到期`).</li></ul>
+  ]]></description>
+  <pubDate>Fri, 01 May 2026 02:49:58 +0000</pubDate>
+  <sparkle:version>1.0.28</sparkle:version>
+  <sparkle:shortVersionString>1.0.28</sparkle:shortVersionString>
+  <sparkle:minimumSystemVersion>10.14</sparkle:minimumSystemVersion>
+  <enclosure
+    url="https://github.com/Clash-FX/ClashFX/releases/download/1.0.28/ClashFX.dmg"
+    sparkle:version="1.0.28"
+    sparkle:shortVersionString="1.0.28"
+    sparkle:edSignature="7D4geAfdr/GiGYqbXubTOes/pxeH7V6x6+Vcz1EKfrafwtjDD7BjtRaMaXIkjxV/j5BuYIejCoRMaqFf1JflAw=="
+    length="88994373"
+    type="application/octet-stream"
+  />
+</item>
+    <item>
+  <title>Version 1.0.26</title>
+  <description><![CDATA[
+    <h2>ClashFX v1.0.26</h2><ul><li><strong>Subscription Metadata Filtering</strong> — Removed subscription status entries such as remaining traffic, expiry, and filtered line notices from generated proxy groups so they are no longer tested as real nodes.</li><li><strong>Auto Speed Test Menu</strong> — Kept the Auto submenu open after ReTest by refreshing existing menu items instead of rebuilding the active menu.</li><li><strong>ClashFX Branding</strong> — Finished replacing leftover ClashX menu/error labels and stabilized startup menu binding.</li></ul>
+  ]]></description>
+  <pubDate>Thu, 30 Apr 2026 17:45:24 +0000</pubDate>
+  <sparkle:version>1.0.26</sparkle:version>
+  <sparkle:shortVersionString>1.0.26</sparkle:shortVersionString>
+  <sparkle:minimumSystemVersion>10.14</sparkle:minimumSystemVersion>
+  <enclosure
+    url="https://github.com/Clash-FX/ClashFX/releases/download/1.0.26/ClashFX.dmg"
+    sparkle:version="1.0.26"
+    sparkle:shortVersionString="1.0.26"
+    sparkle:edSignature="uKmVSDaYR+NLbyZ80BxRqNbsg3dL85ByVrKF1bUvYUidYv8Bw0vdRwNLbeZTk0lxYol7KgdkKetN9BYkwmZ/Aw=="
+    length="88981526"
+    type="application/octet-stream"
+  />
+</item>
+    <item>
+  <title>Version 1.0.25</title>
+  <description><![CDATA[
+    <h2>ClashFX v1.0.25</h2><ul><li><strong>Proxy Delay Diagnostics</strong> — Added detailed logs for proxy delay tests, including proxy name, benchmark URL, HTTP status, response body, and request error details.</li></ul>
+  ]]></description>
+  <pubDate>Thu, 30 Apr 2026 10:26:36 +0000</pubDate>
+  <sparkle:version>1.0.25</sparkle:version>
+  <sparkle:shortVersionString>1.0.25</sparkle:shortVersionString>
+  <sparkle:minimumSystemVersion>10.14</sparkle:minimumSystemVersion>
+  <enclosure
+    url="https://github.com/Clash-FX/ClashFX/releases/download/1.0.25/ClashFX.dmg"
+    sparkle:version="1.0.25"
+    sparkle:shortVersionString="1.0.25"
+    sparkle:edSignature="SHXoGedietLOi6h7k+IAvcss6uUI0iAH2WIHhcIrtPJkJoToNNgAX+eXyvznsqEAh9R5BWCGvTRFCVCwJOoUDQ=="
+    length="89022112"
+    type="application/octet-stream"
+  />
+</item>
+    <item>
+  <title>Version 1.0.24</title>
+  <description><![CDATA[
+    <h2>ClashFX v1.0.24</h2><ul><li><strong>Subscriptions</strong> — Fixed an issue where raw base64 share-link subscriptions failed to import due to improper validation order.</li><li><strong>Config Parser</strong> — Tightened remote config verification to catch semantic formatting errors earlier.</li></ul>
+  ]]></description>
+  <pubDate>Thu, 30 Apr 2026 05:40:41 +0000</pubDate>
+  <sparkle:version>1.0.24</sparkle:version>
+  <sparkle:shortVersionString>1.0.24</sparkle:shortVersionString>
+  <sparkle:minimumSystemVersion>10.14</sparkle:minimumSystemVersion>
+  <enclosure
+    url="https://github.com/Clash-FX/ClashFX/releases/download/1.0.24/ClashFX.dmg"
+    sparkle:version="1.0.24"
+    sparkle:shortVersionString="1.0.24"
+    sparkle:edSignature="YH8TZ8JFentcMJJdy3HQ6bP16KAkYoKS0JdR7CEOPH0hwXBEiawm+P2ktkMKYrM4LAIgj5n2ZktkFPeqrrHSDg=="
+    length="89001595"
+    type="application/octet-stream"
+  />
+</item>
+    <item>
+  <title>Version 1.0.23</title>
+  <description><![CDATA[
+    <h2>ClashFX v1.0.23</h2><ul><li><strong>Prioritized the `Proxy` selector in generated share-link configs</strong> — Generated compatibility configs now define `Proxy` before `Auto`, migrate existing generated templates, and sort selector groups before automatic groups in the tray menu. Choosing a fixed node in `Proxy` now remains the clear primary route, while `Auto` stays visible as the automatic test group status.</li></ul>
+  ]]></description>
+  <pubDate>Wed, 29 Apr 2026 16:34:05 +0000</pubDate>
+  <sparkle:version>1.0.23</sparkle:version>
+  <sparkle:shortVersionString>1.0.23</sparkle:shortVersionString>
+  <sparkle:minimumSystemVersion>10.14</sparkle:minimumSystemVersion>
+  <enclosure
+    url="https://github.com/Clash-FX/ClashFX/releases/download/1.0.23/ClashFX.dmg"
+    sparkle:version="1.0.23"
+    sparkle:shortVersionString="1.0.23"
+    sparkle:edSignature="2YyTh3h5rqkImPuWqliNazRHTmtcIQ01HPEX7pZleysV9HD55M5rjJYGeI0ZC33kbo/SUGHXLizbeJPEsUTgDA=="
+    length="88955950"
+    type="application/octet-stream"
+  />
+</item>
+    <item>
+  <title>Version 1.0.22</title>
+  <description><![CDATA[
+    <h2>ClashFX v1.0.22</h2><ul><li><strong>Restored manual selection as the default generated fallback</strong> — Share-link compatibility configs now route unmatched traffic through the `Proxy` selector instead of directly through `Auto`, so users can keep a fixed node for IP-sensitive services while still choosing `Auto` when they want automatic fastest-node selection.</li></ul>
+  ]]></description>
+  <pubDate>Wed, 29 Apr 2026 15:45:29 +0000</pubDate>
+  <sparkle:version>1.0.22</sparkle:version>
+  <sparkle:shortVersionString>1.0.22</sparkle:shortVersionString>
+  <sparkle:minimumSystemVersion>10.14</sparkle:minimumSystemVersion>
+  <enclosure
+    url="https://github.com/Clash-FX/ClashFX/releases/download/1.0.22/ClashFX.dmg"
+    sparkle:version="1.0.22"
+    sparkle:shortVersionString="1.0.22"
+    sparkle:edSignature="K7c2uq+4pDs335rUt3vmvr9Np9smZtVaDH1fGDZ8tvt+ZVYA3ZWWqwVmp4eaG6oWPfrdaHH9H69QGpTSIh5eBQ=="
+    length="88950306"
+    type="application/octet-stream"
+  />
+</item>
+    <item>
+  <title>Version 1.0.21</title>
+  <description><![CDATA[
+    <h2>ClashFX v1.0.21</h2><ul><li><strong>Fixed share-link subscriptions with protocols supported by mihomo</strong> — ClashFX now uses mihomo's own subscription converter when a remote subscription returns share links, so generated configs support more protocols and fields including SSR, TUIC, AnyTLS, Mieru, and more complete VMess/VLESS/Trojan/Hysteria options. This fixes cases where the same subscription worked in ClashX Pro but nodes generated by ClashFX could not connect.</li><li><strong>Added per-subscription User-Agent setting</strong> — Remote config entries now include an optional User-Agent field. Providers that restrict subscriptions by client type can be updated with a custom UA while existing subscriptions continue to use the default `mihomo/1.19.24` UA when left blank.</li></ul>
+  ]]></description>
+  <pubDate>Wed, 29 Apr 2026 08:33:43 +0000</pubDate>
+  <sparkle:version>1.0.21</sparkle:version>
+  <sparkle:shortVersionString>1.0.21</sparkle:shortVersionString>
+  <sparkle:minimumSystemVersion>10.14</sparkle:minimumSystemVersion>
+  <enclosure
+    url="https://github.com/Clash-FX/ClashFX/releases/download/1.0.21/ClashFX.dmg"
+    sparkle:version="1.0.21"
+    sparkle:shortVersionString="1.0.21"
+    sparkle:edSignature="1uc5XIXSnk/15sqr+5EqGnJCgKhGAZ6g+xSJWdDx+z9WF8awkRcPk9YJVe702wKLD6IfFIsi5Z7B1ibWCpObAg=="
+    length="88954963"
+    type="application/octet-stream"
+  />
+</item>
+    <item>
+  <title>Version 1.0.20</title>
+  <description><![CDATA[
+    <h2>ClashFX v1.0.20</h2><ul><li><strong>Fixed UI freeze when toggling Enhanced Mode with many proxy groups</strong> — Toggling Enhanced Mode (TUN) on configurations with many proxy groups (30+ groups, hundreds of proxies) caused the UI to freeze for several seconds with CPU at 100%. The toggle path no longer forces a full menu rebuild on every switch — it now uses lightweight refresh when proxy topology is unchanged, and only rebuilds when group structure actually changes. Removed unnecessary 1-second delay chains.</li><li><strong>Fixed proxy list disappearing after toggling Enhanced Mode</strong> — After turning Enhanced Mode off, the proxy group list could become empty, requiring a manual config switch to restore it. The proxy data cache is now properly updated after each topology change.</li><li><strong>Fixed Main Thread Checker warning on app quit</strong> — `NSApp.reply(toApplicationShouldTerminate:)` was called from a background queue during cleanup, which could cause UI inconsistencies. All termination replies are now properly dispatched to the main thread.</li></ul>
+  ]]></description>
+  <pubDate>Tue, 28 Apr 2026 09:14:39 +0000</pubDate>
+  <sparkle:version>1.0.20</sparkle:version>
+  <sparkle:shortVersionString>1.0.20</sparkle:shortVersionString>
+  <sparkle:minimumSystemVersion>10.14</sparkle:minimumSystemVersion>
+  <enclosure
+    url="https://github.com/Clash-FX/ClashFX/releases/download/1.0.20/ClashFX.dmg"
+    sparkle:version="1.0.20"
+    sparkle:shortVersionString="1.0.20"
+    sparkle:edSignature="WQgK4YheA/CZKl0mx1ET+JqthwxYBm0pYedxL4lo4MN4HdpTVzgfYq5sEZ11OY9QaPHCioBKrpXZti0aR3VCDQ=="
+    length="88988604"
+    type="application/octet-stream"
+  />
+</item>
+    <item>
+  <title>Version 1.0.19</title>
+  <description><![CDATA[
+    <h2>ClashFX v1.0.19</h2><ul><li><strong>Fixed Enhanced Mode (TUN) DNS hijacking on macOS</strong> — When TUN mode was enabled, DNS queries to the local router bypassed the TUN device entirely because private network addresses (192.168.x.x) are routed directly through the LAN interface. This caused DNS pollution from the GFW, breaking connectivity to blocked sites for applications like Node.js, Discord, and other tools that don't respect macOS system proxy settings. ClashFX now automatically overrides the system DNS to `198.18.0.2` (TUN fake-ip range) when Enhanced Mode is activated, and restores the original DNS when it's disabled. DNS cache is also flushed on both transitions.</li><li><strong>Helper update required</strong> — This release includes changes to the privileged helper (version 1.0 → 1.1). On first launch after update, ClashFX will prompt for your administrator password to reinstall the helper. This is required for the DNS fix to work automatically.</li><li><strong>Automatic DNS cache flush</strong> — DNS cache is now automatically flushed when enabling or disabling Enhanced Mode, preventing stale/poisoned DNS entries from causing connection failures.</li><li><strong>DNS state cleanup on quit</strong> — If the app is quit while Enhanced Mode is active, DNS settings are automatically restored to prevent leaving the system in a broken state.</li></ul>
+  ]]></description>
+  <pubDate>Tue, 28 Apr 2026 05:19:29 +0000</pubDate>
+  <sparkle:version>1.0.19</sparkle:version>
+  <sparkle:shortVersionString>1.0.19</sparkle:shortVersionString>
+  <sparkle:minimumSystemVersion>10.14</sparkle:minimumSystemVersion>
+  <enclosure
+    url="https://github.com/Clash-FX/ClashFX/releases/download/1.0.19/ClashFX.dmg"
+    sparkle:version="1.0.19"
+    sparkle:shortVersionString="1.0.19"
+    sparkle:edSignature="srhLCSp58QpciSrBliIbj8frIz35gg/8E/Uq+Ob8RekkTR+B/iK8H9knzdoWx5i94S8NUPhSztn/owL+1KwOAg=="
+    length="88946900"
+    type="application/octet-stream"
+  />
+</item>
+    <item>
+  <title>Version 1.0.18</title>
+  <description><![CDATA[
+    <h2>ClashFX v1.0.18</h2><ul><li><strong>Fixed subscription links with VMess/Trojan/VLESS/Hysteria protocols</strong> — Subscription URLs that return share-link lists (vmess://, trojan://, vless://, hysteria://, hysteria2://) are now automatically converted to Clash-compatible YAML configs. Previously only Shadowsocks (ss://) links were supported; all other protocols silently failed with a "yaml unmarshal" error. Fixes #45.</li><li><strong>Fixed raw (non-base64) share-link subscriptions</strong> — Subscription URLs that return plain-text share links without base64 encoding are now handled correctly.</li><li><strong>Full transport layer support for converted share links</strong> — Auto-generated configs from share links now support WebSocket, gRPC, HTTP/2, and HTTP obfuscation transport layers, as well as TLS, ALPN, fingerprint, and Reality options.</li></ul>
+  ]]></description>
+  <pubDate>Mon, 27 Apr 2026 10:13:00 +0000</pubDate>
+  <sparkle:version>1.0.18</sparkle:version>
+  <sparkle:shortVersionString>1.0.18</sparkle:shortVersionString>
+  <sparkle:minimumSystemVersion>10.14</sparkle:minimumSystemVersion>
+  <enclosure
+    url="https://github.com/Clash-FX/ClashFX/releases/download/1.0.18/ClashFX.dmg"
+    sparkle:version="1.0.18"
+    sparkle:shortVersionString="1.0.18"
+    sparkle:edSignature="6/BQHrNe6raKbQGAHJqBQhEbg4YUkEQeWHqt9zk5WYRuiYk7paWLqTts6HMGBFeGfG3RrC6nYAUQdm0qzPNPBA=="
+    length="88943713"
+    type="application/octet-stream"
+  />
+</item>
+    <item>
+  <title>Version 1.0.17</title>
+  <description><![CDATA[
+    <h2>ClashFX v1.0.17</h2><ul><li><strong>Upgraded generated compatibility configs to geosite template</strong> — Share-link subscriptions (base64 SS/VMess) now generate configs with `geodata-mode: true`, geosite/geoip CN direct routing, DNS fallback (domestic 223.5.5.5 / foreign 1.1.1.1), and comprehensive private-network IP-CIDR rules. Existing generated configs auto-upgrade on first launch.</li><li><strong>Restored parent group Switch in tray menu settings</strong> — Parent group rows (e.g. "Proxy Actions", "General Settings") now show a Switch again. Toggling it off collapses all child items with a smooth animation; toggling it back on expands them. Fixes #41.</li><li><strong>Hide parent menu item when all children are off</strong> — If every sub-item in a tray menu group (Configs, Help) is toggled off, the parent menu item now hides automatically instead of showing an empty shell. Fixes #44.</li><li><strong>Fixed Catalina menu bar speed rendering</strong> — Added `wantsLayer` backing for the custom speed text view, ensuring the upload/download speed display renders correctly on macOS 10.15 Catalina.</li><li><strong>Upgraded mihomo core from v1.19.21 to v1.19.24</strong> — Three patch releases of bug fixes and protocol improvements.</li><li><strong>Updated subscription User-Agent to mihomo/1.19.24</strong> — Matches the actual core version to avoid provider misclassification.</li></ul>
+  ]]></description>
+  <pubDate>Mon, 27 Apr 2026 07:31:47 +0000</pubDate>
+  <sparkle:version>1.0.17</sparkle:version>
+  <sparkle:shortVersionString>1.0.17</sparkle:shortVersionString>
+  <sparkle:minimumSystemVersion>10.14</sparkle:minimumSystemVersion>
+  <enclosure
+    url="https://github.com/Clash-FX/ClashFX/releases/download/1.0.17/ClashFX.dmg"
+    sparkle:version="1.0.17"
+    sparkle:shortVersionString="1.0.17"
+    sparkle:edSignature="cgYA6ikmwMGAeXUGuLS0wnyrujkvYixc1DSEONeeqkWCoEZDGotw7fXlsi6HuYCd4UcelM2yORtgM4tRAFYvAg=="
+    length="88945910"
+    type="application/octet-stream"
+  />
+</item>
+    <item>
+  <title>Version 1.0.17</title>
+  <description><![CDATA[
+    <h2>ClashFX v1.0.17</h2><ul><li><strong>Restored parent group Switch in tray menu settings</strong> — Parent group rows (e.g. "Proxy Actions", "General Settings") now show a Switch again. Toggling it off collapses all child items with a smooth animation; toggling it back on expands them. Fixes #41.</li></ul>
+  ]]></description>
+  <pubDate>Fri, 24 Apr 2026 16:26:19 +0000</pubDate>
+  <sparkle:version>1.0.17</sparkle:version>
+  <sparkle:shortVersionString>1.0.17</sparkle:shortVersionString>
+  <sparkle:minimumSystemVersion>10.14</sparkle:minimumSystemVersion>
+  <enclosure
+    url="https://github.com/Clash-FX/ClashFX/releases/download/1.0.17/ClashFX.dmg"
+    sparkle:version="1.0.17"
+    sparkle:shortVersionString="1.0.17"
+    sparkle:edSignature="RuaAgl+a5wD2FFZ4+eZOANu+aZ2yGaWll8xgnqZNIPu/PZtwJAV9VC/H3qNftbSBV8aeABOEFI8tf9GhA0aTAg=="
+    length="88066429"
+    type="application/octet-stream"
+  />
+</item>
+    <item>
+  <title>Version 1.0.16</title>
+  <description><![CDATA[
+    <h2>ClashFX v1.0.16</h2><ul><li><strong>Redesigned tray menu settings panel with card-based grouped layout</strong> — The Appearance settings now display tray menu options in rounded card groups, clearly separating each section visually, with full dark mode support and proper spacing.</li><li><strong>Group section headers are now label-only</strong> — Section titles like "Proxy Actions" and "General Settings" no longer carry a toggle switch; each child item is individually controlled, reducing visual clutter and improving clarity.</li><li><strong>Smaller toggle switches and descriptive hint text</strong> — Switches are now `mini` sized for better visual balance, and a hint label at the top of the panel describes the show/hide purpose of the settings.</li><li><strong>Tray menu settings hint text fully localized</strong> — The new hint label is localized across all 5 supported languages: English, Simplified Chinese, Traditional Chinese, Japanese, and Russian.</li></ul>
+  ]]></description>
+  <pubDate>Fri, 24 Apr 2026 12:08:20 +0000</pubDate>
+  <sparkle:version>1.0.16</sparkle:version>
+  <sparkle:shortVersionString>1.0.16</sparkle:shortVersionString>
+  <sparkle:minimumSystemVersion>10.14</sparkle:minimumSystemVersion>
+  <enclosure
+    url="https://github.com/Clash-FX/ClashFX/releases/download/1.0.16/ClashFX.dmg"
+    sparkle:version="1.0.16"
+    sparkle:shortVersionString="1.0.16"
+    sparkle:edSignature="9iiWXIPrkhX5ius3QJdaYmTaVW8Zzs0uWIR9sr/TNfR8HSLsNXyHV7AQFTi0L6IP48CkOmteWFupmzbmaCfRAA=="
+    length="88029738"
+    type="application/octet-stream"
+  />
+</item>
+    <item>
+  <title>Version 1.0.15</title>
+  <description><![CDATA[
+    <h2>ClashFX v1.0.15</h2><ul><li><strong>Added a Restart item above Quit in the tray menu</strong> — ClashFX now provides a direct Restart action in the status menu, so users can reload the app and core without manually quitting and reopening.</li><li><strong>Added tray menu item visibility controls in Appearance settings</strong> — The new Tray Menu settings let users decide which sections and items stay visible in the tray, with parent/child toggles, automatic separator cleanup, and a macOS 10.14 checkbox fallback alongside `NSSwitch` on macOS 10.15+.</li><li><strong>Added a Config Switcher toggle and completed ja/ru localizations for tray menu settings</strong> — Dynamic config switch items can now be hidden independently, and the new tray menu settings are fully localized in Japanese and Russian.</li><li><strong>Fixed CI compile regressions in the new tray menu settings UI</strong> — Alignment and control-state access issues from review follow-up changes were corrected so the release build passes cleanly again.</li></ul>
+  ]]></description>
+  <pubDate>Thu, 23 Apr 2026 13:02:02 +0000</pubDate>
+  <sparkle:version>1.0.15</sparkle:version>
+  <sparkle:shortVersionString>1.0.15</sparkle:shortVersionString>
+  <sparkle:minimumSystemVersion>10.14</sparkle:minimumSystemVersion>
+  <enclosure
+    url="https://github.com/Clash-FX/ClashFX/releases/download/1.0.15/ClashFX.dmg"
+    sparkle:version="1.0.15"
+    sparkle:shortVersionString="1.0.15"
+    sparkle:edSignature="PvATInT9VjuzaxnoI/LU2qQT5ZMxhRb2KLLNLJiD815ykr2G+V4IAIcTNr2Lvs9Bi5t7XuCIVortGpfvXvSdCA=="
+    length="88086479"
+    type="application/octet-stream"
+  />
+</item>
+    <item>
+  <title>Version 1.0.14</title>
+  <description><![CDATA[
+    <h2>ClashFX v1.0.14</h2><ul><li><strong>Fixed menu bar icon shrinking when realtime speed is disabled</strong> — ClashFX had already fixed this once, but a later XIB layout change reintroduced a permanent leading constraint between the icon and hidden speed container. The status item now follows the original ClashFX fix again, so disabling realtime speed no longer compresses the tray icon.</li><li><strong>Fixed Config Editor appearance in dark and light mode</strong> — The raw editor, line number ruler, and visual editor sidebar previously used hard-coded dark colors. ClashFX now uses semantic system colors so the Config Editor follows the current macOS appearance correctly in both light and dark mode.</li><li><strong>Improved share-link generated configs for domestic sites</strong> — When ClashFX builds a minimal Clash config from `ss://` share-link subscriptions, it now enables `dns:` and adds direct rules for `baidu.com`, `bdimg.com`, and `bdstatic.com`, reducing cases where domestic domains fall through to `MATCH,Proxy`.</li><li><strong>Improved Settings tab icon compatibility on older macOS</strong> — The Settings window now falls back to generated icons on systems that do not support SF Symbols, instead of leaving missing tab icons.</li><li><strong>Improved menu bar speed text compatibility on older macOS</strong> — The status bar speed view now uses a legacy text-label fallback on older systems while keeping the custom draw path for newer macOS versions.</li></ul>
+  ]]></description>
+  <pubDate>Wed, 22 Apr 2026 06:36:44 +0000</pubDate>
+  <sparkle:version>1.0.14</sparkle:version>
+  <sparkle:shortVersionString>1.0.14</sparkle:shortVersionString>
+  <sparkle:minimumSystemVersion>10.14</sparkle:minimumSystemVersion>
+  <enclosure
+    url="https://github.com/Clash-FX/ClashFX/releases/download/1.0.14/ClashFX.dmg"
+    sparkle:version="1.0.14"
+    sparkle:shortVersionString="1.0.14"
+    sparkle:edSignature="3wRaXw4mfwTErw11gIPbPWfcZsND/pxgAOFIZOmwIbLvLPEIydHjvDHQKfXxBxQ2rpwxP4NR4VSR8Du0Bk5RBA=="
+    length="87976193"
+    type="application/octet-stream"
+  />
+</item>
+    <item>
+  <title>Version 1.0.13</title>
+  <description><![CDATA[
+    <h2>ClashFX v1.0.13</h2><ul><li><strong>Fixed double-encoded share-link subscriptions</strong> — Some providers (e.g. sub.cucloud.top) return a base64 payload where each individual proxy URI is itself base64-encoded a second time, so lines look like `c3M6Ly9...` instead of `ss://...`. ClashFX now detects and decodes these correctly, generates a valid Clash config with `Auto` (url-test) and `Proxy` (select) groups, and no longer shows "cannot unmarshal !!str" errors.</li><li><strong>Fixed domestic site access in Rules mode</strong> — When generating a config from share-link subscriptions, the rules section previously only contained `MATCH,Proxy`, routing all traffic through the proxy including Chinese domestic sites (Baidu, etc.). `GEOIP,private,DIRECT` and `GEOIP,CN,DIRECT` rules are now added before `MATCH,Proxy` so local and domestic traffic bypasses the proxy.</li><li><strong>Fixed blank speed display in menu bar</strong> — The upload/download speed text in the status bar was invisible on first launch. The initial draw call occurred before Auto Layout resolved the view bounds (height = 0), and subsequent updates were silently dropped if the speed values hadn't changed. Fixed by overriding `layout()` to re-trigger `needsDisplay` once bounds are non-zero.</li><li><strong>Fixed settings tab gray block on macOS 15 Sequoia</strong> — `NSTabViewController` with `.toolbar` style renders as a large gray block on macOS 15 due to toolbar layout changes. The settings window now uses `.segmentedControlOnTop` style on macOS 15+ for a clean appearance, while retaining `.toolbar` with proper SF Symbol icons on macOS 11–14.</li></ul>
+  ]]></description>
+  <pubDate>Tue, 21 Apr 2026 08:42:00 +0000</pubDate>
+  <sparkle:version>1.0.13</sparkle:version>
+  <sparkle:shortVersionString>1.0.13</sparkle:shortVersionString>
+  <sparkle:minimumSystemVersion>10.14</sparkle:minimumSystemVersion>
+  <enclosure
+    url="https://github.com/Clash-FX/ClashFX/releases/download/1.0.13/ClashFX.dmg"
+    sparkle:version="1.0.13"
+    sparkle:shortVersionString="1.0.13"
+    sparkle:edSignature="1b85C/tswnpIrZnnH6DdhhBIVAzK+J4CdTpo7nEcElpNIyDvQBQVW9ReyRLnrreKiXHAR1ggQpThN4YYPl4UBQ=="
+    length="88032850"
+    type="application/octet-stream"
+  />
+</item>
+    <item>
+  <title>Version 1.0.12</title>
+  <description><![CDATA[
+    <h2>ClashFX v1.0.12</h2><ul><li><strong>Fixed subscription downloads from mihomo/SS-2022 providers</strong> — Remote subscription requests now send a `mihomo` User-Agent instead of the default Alamofire client identity. This avoids certain providers misclassifying ClashFX as a legacy Dreamacro/clash client and returning empty or dummy configs instead of real nodes.</li><li><strong>Fixed Appearance tab height not adapting to content</strong> — The Appearance settings window now resizes correctly when switching tabs, eliminating clipped or awkward spacing in the UI.</li></ul>
+  ]]></description>
+  <pubDate>Mon, 20 Apr 2026 14:04:33 +0000</pubDate>
+  <sparkle:version>1.0.12</sparkle:version>
+  <sparkle:shortVersionString>1.0.12</sparkle:shortVersionString>
+  <sparkle:minimumSystemVersion>10.14</sparkle:minimumSystemVersion>
+  <enclosure
+    url="https://github.com/Clash-FX/ClashFX/releases/download/1.0.12/ClashFX.dmg"
+    sparkle:version="1.0.12"
+    sparkle:shortVersionString="1.0.12"
+    sparkle:edSignature="qIUUnLL5K7HTm3BHzA4dumw2jD7KTTwpkpdLt5dTCXaR+XRV+jmApkxl3JhgbwstM9W37N8WI9OZozzvCZOCAw=="
+    length="87980662"
+    type="application/octet-stream"
+  />
+</item>
+    <item>
+  <title>Version 1.0.11</title>
+  <description><![CDATA[
+    <h2>ClashFX v1.0.11</h2><ul><li><strong>App logo customization</strong> — Added a new **App Logo** section in Appearance settings. Users can replace the Dock icon with any custom PNG, JPEG, or ICNS image via drag-and-drop or file picker. Saved to `~/.config/clashfx/appLogo.png`.</li><li><strong>Redesigned image picker UI</strong> — Clean horizontal layout with icon preview well, description text with recommended image size, and always-visible "Reset to Default" button (greyed out when no custom icon is set). Shared base class for both Menu Bar Icon and App Logo pickers.</li><li><strong>Fixed "Tray Icon" terminology</strong> — Changed to "Menu Bar Icon" in Simplified Chinese to match macOS conventions.</li><li><strong>Added image size guidance</strong> — Both pickers now show recommended dimensions and supported formats.</li></ul>
+  ]]></description>
+  <pubDate>Thu, 16 Apr 2026 07:55:59 +0000</pubDate>
+  <sparkle:version>1.0.11</sparkle:version>
+  <sparkle:shortVersionString>1.0.11</sparkle:shortVersionString>
+  <sparkle:minimumSystemVersion>10.14</sparkle:minimumSystemVersion>
+  <enclosure
+    url="https://github.com/Clash-FX/ClashFX/releases/download/1.0.11/ClashFX.dmg"
+    sparkle:version="1.0.11"
+    sparkle:shortVersionString="1.0.11"
+    sparkle:edSignature="YvvTzmjru8N5fw1ymv/qFegyCWnO3J3iwp/k7dlW0maP0dxjc2VoDhAF9IM0noB+bb1nS24K+mucyfvS/y27AA=="
+    length="88007626"
+    type="application/octet-stream"
+  />
+</item>
+    <item>
+  <title>Version 1.0.10</title>
+  <description><![CDATA[
+    <h2>ClashFX v1.0.10</h2><ul><li><strong>Tray icon customization</strong> — Added a new **Appearance** tab in Preferences with a tray icon picker. Users can now replace the macOS menu bar icon with any custom PNG image via drag-and-drop or file picker, with a Reset button to restore the default. Image is saved to `~/.config/clashfx/menuImage.png`. Resolves #5</li><li><strong>Updated menu bar icon</strong> — Replaced the status bar icon with a new cat side-profile silhouette design.</li><li><strong>Fix language switch dialog not reappearing after clicking "Later"</strong> — When switching language and dismissing the restart prompt with "Later", clicking the same language again would no longer show the dialog. Language settings are now only persisted when the user confirms the restart. Fixes #15</li><li><strong>Fix proxy selections lost after app restart</strong> — Saved proxy group selections (e.g. which node was chosen for each proxy group) could be permanently deleted if the API call failed during startup (e.g. core not ready yet). The records are now preserved for retry on next reload.</li></ul>
+  ]]></description>
+  <pubDate>Thu, 16 Apr 2026 04:48:13 +0000</pubDate>
+  <sparkle:version>1.0.10</sparkle:version>
+  <sparkle:shortVersionString>1.0.10</sparkle:shortVersionString>
+  <sparkle:minimumSystemVersion>10.14</sparkle:minimumSystemVersion>
+  <enclosure
+    url="https://github.com/Clash-FX/ClashFX/releases/download/1.0.10/ClashFX.dmg"
+    sparkle:version="1.0.10"
+    sparkle:shortVersionString="1.0.10"
+    sparkle:edSignature="qxg211syUAlk7rxcQcsPvlHN2dwrQbDxMVOpotfVw4i1CUjHjoAXZt9klfiWYkw9UTOhF52rFNx6tvgNCkIuCA=="
+    length="96009096"
+    type="application/octet-stream"
+  />
+</item>
+    <item>
+  <title>Version 1.0.10</title>
+  <description><![CDATA[
+    <h2>ClashFX v1.0.10</h2><ul><li><strong>Tray icon customization</strong> — Added a new **Appearance** tab in Preferences with a tray icon picker. Users can now replace the macOS menu bar icon with any custom PNG image via drag-and-drop or file picker, with a Reset button to restore the default. Image is saved to `~/.config/clashfx/menuImage.png`. Resolves #5</li><li><strong>Updated menu bar icon</strong> — Replaced the status bar icon with a new cat side-profile silhouette design.</li><li><strong>Fix language switch dialog not reappearing after clicking "Later"</strong> — When switching language and dismissing the restart prompt with "Later", clicking the same language again would no longer show the dialog. Language settings are now only persisted when the user confirms the restart. Fixes #15</li></ul>
+  ]]></description>
+  <pubDate>Thu, 16 Apr 2026 03:47:34 +0000</pubDate>
+  <sparkle:version>1.0.10</sparkle:version>
+  <sparkle:shortVersionString>1.0.10</sparkle:shortVersionString>
+  <sparkle:minimumSystemVersion>10.14</sparkle:minimumSystemVersion>
+  <enclosure
+    url="https://github.com/Clash-FX/ClashFX/releases/download/1.0.10/ClashFX.dmg"
+    sparkle:version="1.0.10"
+    sparkle:shortVersionString="1.0.10"
+    sparkle:edSignature="6rsVL7E+o53QQnNYNucUqfrQPDEJMJaTZQ6G++mAyGRNiIACvyROl5Tk6Jmcec3qrsbau8UPGfib5tH9B8NBDQ=="
+    length="95792912"
+    type="application/octet-stream"
+  />
+</item>
+    <item>
+  <title>Version 1.0.9</title>
+  <description><![CDATA[
+    <h2>ClashFX v1.0.9</h2><ul><li><strong>Fix remote config validation rejecting configs that use proxy-providers</strong> — Configs referencing proxy-groups supplied by `proxy-providers` were rejected during import with errors like "proxy group: '…' not found", because the pre-validation performed full semantic checks before providers were fetched. Switched remote config verification to lightweight YAML-only validation; full validation still occurs when the config is loaded by the core. Fixes #12</li></ul>
+  ]]></description>
+  <pubDate>Thu, 09 Apr 2026 15:58:48 +0000</pubDate>
+  <sparkle:version>1.0.9</sparkle:version>
+  <sparkle:shortVersionString>1.0.9</sparkle:shortVersionString>
+  <sparkle:minimumSystemVersion>10.14</sparkle:minimumSystemVersion>
+  <enclosure
+    url="https://github.com/Clash-FX/ClashFX/releases/download/1.0.9/ClashFX.dmg"
+    sparkle:version="1.0.9"
+    sparkle:shortVersionString="1.0.9"
+    sparkle:edSignature="dfiyInNYAdqXx87lqFjhrB7I9BXdDBpVQllBQzVwktRPZApRLhDj0CIJKplrrtj2BhVpvsSsWHGEkJIVzOHlCw=="
+    length="96100815"
+    type="application/octet-stream"
+  />
+</item>
+    <item>
+  <title>Version 1.0.8</title>
+  <description><![CDATA[
+    <h2>ClashFX v1.0.8</h2><ul><li><strong>Fix remote config import rejecting proxy-provider-only configs</strong> — Configs using only proxy-providers (without inline proxies) were incorrectly rejected with format error. Fixes #12</li><li><strong>Fix menu bar icon shrinking when speed display is disabled</strong> — The tray icon was rendered too small when real-time speed display was turned off. by @YangYongAn</li></ul>
+  ]]></description>
+  <pubDate>Wed, 09 Apr 2026 02:24:00 +0000</pubDate>
+  <sparkle:version>1.0.8</sparkle:version>
+  <sparkle:shortVersionString>1.0.8</sparkle:shortVersionString>
+  <sparkle:minimumSystemVersion>10.14</sparkle:minimumSystemVersion>
+  <enclosure
+    url="https://github.com/Clash-FX/ClashFX/releases/download/1.0.8/ClashFX.dmg"
+    sparkle:version="1.0.8"
+    sparkle:shortVersionString="1.0.8"
+    sparkle:edSignature="DjmS/lsx8RWehrmGFhP3dv8/vlOThxyG5GGutIqA01h8rz/s6s87oNz1wyrUH9xnITq4R2lFf/Ji91054nhZBA=="
+    length="96151630"
+    type="application/octet-stream"
+  />
+</item>
+    <item>
+  <title>Version 1.0.7</title>
+  <description><![CDATA[
+    <h2>ClashFX v1.0.7</h2><ul><li><strong>TUN route exclusion settings</strong> — Exclude specific IPs, CIDRs, and domains from TUN routing. by @YangYongAn</li><li><strong>Remove menu bar separator</strong> — Remove the 1px divider between the tray icon and speed numbers for a cleaner look. by @ayangweb</li></ul>
+  ]]></description>
+  <pubDate>Sun, 06 Apr 2026 08:54:00 +0000</pubDate>
+  <sparkle:version>1.0.7</sparkle:version>
+  <sparkle:shortVersionString>1.0.7</sparkle:shortVersionString>
+  <sparkle:minimumSystemVersion>10.14</sparkle:minimumSystemVersion>
+  <enclosure
+    url="https://github.com/Clash-FX/ClashFX/releases/download/1.0.7/ClashFX.dmg"
+    sparkle:version="1.0.7"
+    sparkle:shortVersionString="1.0.7"
+    sparkle:edSignature="QLkTxN+zH/cs8Wv5iwLQUO7KcWJ6dv3NmO2On2ol8o56AQcBTB/3c5n3QJrwHpOfupG/5ydod64ClrP9epqfBQ=="
+    length="96150783"
+    type="application/octet-stream"
+  />
+</item>
+    <item>
+  <title>Version 1.0.6</title>
+  <description><![CDATA[
+    <h2>ClashFX v1.0.6</h2><ul><li><strong>Fix dashboard top spacing</strong> — Reduce excess blank space at the top of the content area caused by the previous traffic-light overlap fix. Overview cards now render flush below the title bar without scrolling</li><li><strong>Fix traffic light button overlap</strong> — Prevent the dashboard sidebar from covering macOS window control buttons</li></ul>
+  ]]></description>
+  <pubDate>Fri, 03 Apr 2026 15:14:02 +0000</pubDate>
+  <sparkle:version>1.0.6</sparkle:version>
+  <sparkle:shortVersionString>1.0.6</sparkle:shortVersionString>
+  <sparkle:minimumSystemVersion>10.14</sparkle:minimumSystemVersion>
+  <enclosure
+    url="https://github.com/Clash-FX/ClashFX/releases/download/1.0.6/ClashFX.dmg"
+    sparkle:version="1.0.6"
+    sparkle:shortVersionString="1.0.6"
+    sparkle:edSignature="qmh1rB3a5mVFetJKtaXmvrqXMDvBr0qxPSzlJNzypTn4rw4lF/J+mmAHr9hdSPYGZmnTckZyV6WXBsXiH3jkDg=="
+    length="95972203"
+    type="application/octet-stream"
+  />
+</item>
+    <item>
+  <title>Version 1.0.6</title>
+  <description><![CDATA[
+    <h2>ClashFX v1.0.6</h2><ul><li><strong>Fix dashboard top spacing</strong> — Reduce excess blank space at the top of the content area caused by the previous traffic-light overlap fix. Overview cards now render flush below the title bar without scrolling</li><li><strong>Fix traffic light button overlap</strong> — Prevent the dashboard sidebar from covering macOS window control buttons</li></ul>
+  ]]></description>
+  <pubDate>Fri, 03 Apr 2026 14:49:18 +0000</pubDate>
+  <sparkle:version>1.0.6</sparkle:version>
+  <sparkle:shortVersionString>1.0.6</sparkle:shortVersionString>
+  <sparkle:minimumSystemVersion>10.14</sparkle:minimumSystemVersion>
+  <enclosure
+    url="https://github.com/Clash-FX/ClashFX/releases/download/1.0.6/ClashFX.dmg"
+    sparkle:version="1.0.6"
+    sparkle:shortVersionString="1.0.6"
+    sparkle:edSignature="1k1Uks7Gbco7Tan0No9dv00z26fCemZcrNM4iiDWFaRyBvcu99XJAwg1eVz0qPG4zW+HTPyzED7Grm2uOMXVDw=="
+    length="95972773"
+    type="application/octet-stream"
+  />
+</item>
+    <item>
+  <title>Version 1.0.6</title>
+  <description><![CDATA[
+    <h2>ClashFX v1.0.6</h2><ul><li><strong>Switch to metacubexd dashboard</strong> — Replace Yacd-meta with the official MetaCubeX dashboard. Fixes empty log page and connection panel layout issues. Smaller bundle (3.2 MB vs 6.9 MB)</li><li><strong>Robust dashboard upgrade</strong> — Dashboard files are now reliably replaced on every app update, even when old files have restricted permissions</li></ul>
+  ]]></description>
+  <pubDate>Fri, 03 Apr 2026 14:11:55 +0000</pubDate>
+  <sparkle:version>1.0.6</sparkle:version>
+  <sparkle:shortVersionString>1.0.6</sparkle:shortVersionString>
+  <sparkle:minimumSystemVersion>10.14</sparkle:minimumSystemVersion>
+  <enclosure
+    url="https://github.com/Clash-FX/ClashFX/releases/download/1.0.6/ClashFX.dmg"
+    sparkle:version="1.0.6"
+    sparkle:shortVersionString="1.0.6"
+    sparkle:edSignature="5OeXNS73ZAmv/Llfdm+8CiEkxzg2LRqQPdtX7EQOCdBfSdxsSbZTWkAyczHbpjFiqqt7VofX8B+Xaqt78Wk4BQ=="
+    length="95970666"
+    type="application/octet-stream"
+  />
+</item>
+    <item>
+  <title>Version 1.0.6</title>
+  <description><![CDATA[
+    <h2>ClashFX v1.0.6</h2><ul><li><strong>Switch to metacubexd dashboard</strong> — Replace Yacd-meta with the official MetaCubeX dashboard. Fixes empty log page and connection panel layout issues. Smaller bundle (3.2 MB vs 6.9 MB)</li><li><strong>Robust dashboard upgrade</strong> — Dashboard files are now reliably replaced on every app update, even when old files have restricted permissions</li></ul>
+  ]]></description>
+  <pubDate>Fri, 03 Apr 2026 13:46:34 +0000</pubDate>
+  <sparkle:version>1.0.6</sparkle:version>
+  <sparkle:shortVersionString>1.0.6</sparkle:shortVersionString>
+  <sparkle:minimumSystemVersion>10.14</sparkle:minimumSystemVersion>
+  <enclosure
+    url="https://github.com/Clash-FX/ClashFX/releases/download/1.0.6/ClashFX.dmg"
+    sparkle:version="1.0.6"
+    sparkle:shortVersionString="1.0.6"
+    sparkle:edSignature="hy9iP9V/oI4B1vKpZCj8AOevu8xNA3EKOG3WkF+nPd6lJhcXgWL4KQgc5KT+I+TLsIuU3QEP0Yq1SG+0RmrsCA=="
+    length="96055185"
+    type="application/octet-stream"
+  />
+</item>
+    <item>
+  <title>Version 1.0.5</title>
+  <description><![CDATA[
+    <h2>ClashFX v1.0.5</h2><ul><li><strong>Switch to metacubexd dashboard</strong> — Replace Yacd-meta with the official MetaCubeX dashboard. Fixes empty log page and connection panel layout issues. Smaller bundle (3.2 MB vs 6.9 MB)</li><li><strong>Robust dashboard upgrade</strong> — Dashboard files are now reliably replaced on every app update, even when old files have restricted permissions</li></ul>
+  ]]></description>
+  <pubDate>Fri, 03 Apr 2026 13:22:12 +0000</pubDate>
+  <sparkle:version>1.0.5</sparkle:version>
+  <sparkle:shortVersionString>1.0.5</sparkle:shortVersionString>
+  <sparkle:minimumSystemVersion>10.14</sparkle:minimumSystemVersion>
+  <enclosure
+    url="https://github.com/Clash-FX/ClashFX/releases/download/1.0.5/ClashFX.dmg"
+    sparkle:version="1.0.5"
+    sparkle:shortVersionString="1.0.5"
+    sparkle:edSignature="ivmfLX01BXyDjh6qb+SfqlJvCfO//CU/UQT2OQqaZcvV9j0+bqOiXNjNopNRtzryf+VtC+u0ES52JeHEN4KSCQ=="
+    length="95967863"
+    type="application/octet-stream"
+  />
+</item>
+    <item>
+  <title>Version 1.0.5</title>
+  <description><![CDATA[
+    <h2>ClashFX v1.0.5</h2><ul><li><strong>Switch to metacubexd dashboard</strong> — Replace Yacd-meta with the official MetaCubeX dashboard. Fixes empty log page and connection panel layout issues. Smaller bundle (3.2 MB vs 6.9 MB)</li><li><strong>Robust dashboard upgrade</strong> — Dashboard files are now reliably replaced on every app update, even when old files have restricted permissions</li></ul>
+  ]]></description>
+  <pubDate>Fri, 03 Apr 2026 13:04:01 +0000</pubDate>
+  <sparkle:version>1.0.5</sparkle:version>
+  <sparkle:shortVersionString>1.0.5</sparkle:shortVersionString>
+  <sparkle:minimumSystemVersion>10.14</sparkle:minimumSystemVersion>
+  <enclosure
+    url="https://github.com/Clash-FX/ClashFX/releases/download/1.0.5/ClashFX.dmg"
+    sparkle:version="1.0.5"
+    sparkle:shortVersionString="1.0.5"
+    sparkle:edSignature="hn0Q3DOFX1XAPrTXx6N+zjF+T4vxujO1ypRNrAgoIbwA68AFtq7JSZTrnkogsRYVVjkPg7oxrG7hLetS3JWCBQ=="
+    length="96044194"
+    type="application/octet-stream"
+  />
+</item>
+    <item>
+  <title>Version 1.0.4</title>
+  <description><![CDATA[
+    <h2>ClashFX v1.0.4</h2><ul><li><strong>Fix proxy groups not showing all proxies</strong> — Proxies using newer protocols (Hysteria, Hysteria2, TUIC, SSH, Anytls) were silently dropped due to unknown type decoding failure. Now all proxy types display correctly (#6)</li><li><strong>Sparkle auto-update</strong> — Replace manual browser-based updates with Sparkle native auto-update. Check for Updates now downloads, installs, and relaunches automatically</li><li><strong>Fix CI code signing</strong> — Release builds are now properly ad-hoc signed, enabling Sparkle signature validation</li></ul>
+  ]]></description>
+  <pubDate>Fri, 03 Apr 2026 11:38:42 +0000</pubDate>
+  <sparkle:version>1.0.4</sparkle:version>
+  <sparkle:shortVersionString>1.0.4</sparkle:shortVersionString>
+  <sparkle:minimumSystemVersion>10.14</sparkle:minimumSystemVersion>
+  <enclosure
+    url="https://github.com/Clash-FX/ClashFX/releases/download/1.0.4/ClashFX.dmg"
+    sparkle:version="1.0.4"
+    sparkle:shortVersionString="1.0.4"
+    sparkle:edSignature="Zpe66YzLvwjfBb9CvIrmdjr5IxL+P+fOd9/IhVrp7Hx8rG0GtGDlHnM6MKohJkKsQLM9FnfYMeUi4yZwatpmDA=="
+    length="96386237"
+    type="application/octet-stream"
+  />
+</item>
+    <item>
+  <title>Version 1.0.4</title>
+  <description><![CDATA[
+    <h2>ClashFX v1.0.4</h2><ul><li><strong>Fix proxy groups not showing all proxies</strong> — Proxies using newer protocols (Hysteria, Hysteria2, TUIC, SSH, Anytls) were silently dropped due to unknown type decoding failure. Now all proxy types display correctly (#6)</li><li><strong>Sparkle auto-update</strong> — Replace manual browser-based updates with Sparkle native auto-update. Check for Updates now downloads, installs, and relaunches automatically</li><li><strong>Fix CI code signing</strong> — Release builds are now properly ad-hoc signed, enabling Sparkle signature validation</li></ul>
+  ]]></description>
+  <pubDate>Fri, 03 Apr 2026 11:14:18 +0000</pubDate>
+  <sparkle:version>1.0.4</sparkle:version>
+  <sparkle:shortVersionString>1.0.4</sparkle:shortVersionString>
+  <sparkle:minimumSystemVersion>10.14</sparkle:minimumSystemVersion>
+  <enclosure
+    url="https://github.com/Clash-FX/ClashFX/releases/download/1.0.4/ClashFX.dmg"
+    sparkle:version="1.0.4"
+    sparkle:shortVersionString="1.0.4"
+    sparkle:edSignature="TlyC/+NhXQp+tWroC+Mj1LeHAGva9oeC1dGYm6fJNS7/DB9a3i3oPKUruieOFDyXpVeEC2VpaU1FtOjWRnWBCA=="
+    length="96316705"
+    type="application/octet-stream"
+  />
+</item>
+    <item>
+  <title>Version 1.0.3</title>
+  <description><![CDATA[
+    <h2>ClashFX v1.0.3</h2><ul><li><strong>Fix geosite download failure</strong> — Bundle geosite.dat in the app so subscriptions with geosite rules work on first launch without needing GitHub access (#1)</li><li><strong>Fix version check showing 10.14</strong> — AppcastParser was collecting text from sibling XML elements (minimumSystemVersion). Version number is now correctly scoped (#2)</li><li><strong>Fix dashboard broken after "Update UI"</strong> — Clear all WKWebView data types including ServiceWorker registrations on launch. Add upgrade_ui JS bridge handler to safely reset dashboard from bundled files (#3)</li><li><strong>Auto-notify websites on release</strong> — New releases automatically update version numbers on clashfx.com and clashx.tech via repository_dispatch</li></ul>
+  ]]></description>
+  <pubDate>Mon, 30 Mar 2026 15:14:29 +0000</pubDate>
+  <sparkle:version>1.0.3</sparkle:version>
+  <sparkle:shortVersionString>1.0.3</sparkle:shortVersionString>
+  <sparkle:minimumSystemVersion>10.14</sparkle:minimumSystemVersion>
+  <enclosure
+    url="https://github.com/Clash-FX/ClashFX/releases/download/1.0.3/ClashFX.dmg"
+    sparkle:version="1.0.3"
+    sparkle:shortVersionString="1.0.3"
+    sparkle:edSignature="pEfSMtCV+JNyT2Q3DJGxpHCnKEPMMCtPF7uzwUGk3zmZccLk6pJKjqLC67inlba7lMOqv6q/T539BgtglFf1BA=="
+    length="96072146"
+    type="application/octet-stream"
+  />
+</item>
+    <item>
+  <title>Version 1.0.2</title>
+  <description><![CDATA[
+    <h2>ClashFX v1.0.2</h2><ul><li><strong>Fix geosite download failure</strong> — Bundle geosite.dat in the app so subscriptions with geosite rules work on first launch without needing GitHub access (#1)</li><li><strong>Fix version check showing 10.14</strong> — AppcastParser was collecting text from sibling XML elements (minimumSystemVersion). Version number is now correctly scoped (#2)</li><li><strong>Fix dashboard broken after "Update UI"</strong> — Clear all WKWebView data types including ServiceWorker registrations on launch. Add upgrade_ui JS bridge handler to safely reset dashboard from bundled files (#3)</li><li><strong>Auto-notify websites on release</strong> — New releases automatically update version numbers on clashfx.com and clashx.tech via repository_dispatch</li></ul>
+  ]]></description>
+  <pubDate>Mon, 30 Mar 2026 04:48:54 +0000</pubDate>
+  <sparkle:version>1.0.2</sparkle:version>
+  <sparkle:shortVersionString>1.0.2</sparkle:shortVersionString>
+  <sparkle:minimumSystemVersion>10.14</sparkle:minimumSystemVersion>
+  <enclosure
+    url="https://github.com/Clash-FX/ClashFX/releases/download/1.0.2/ClashFX.dmg"
+    sparkle:version="1.0.2"
+    sparkle:shortVersionString="1.0.2"
+    sparkle:edSignature="/pvY4ikNIa+bcUdobh8FRNEzoTq3HWvWroo4eifp+8NIdsS8WTxIrB3lCVkTzKUIDkeSCE+43ToZh9g8dCcABA=="
+    length="96065901"
+    type="application/octet-stream"
+  />
+</item>
+    <item>
+  <title>Version 1.0.1</title>
+  <description><![CDATA[
+    <h2>ClashFX v1.0.1</h2><ul><li><strong>Fix status bar speed overflow</strong> — Network speed text (e.g. "4.22MB/s") no longer intrudes into the vertical separator line. The status item now dynamically resizes based on actual text width</li><li><strong>Fix auto-update system</strong> — All appcast download URLs were pointing to the wrong repository (`ClashX-Pro/ClashX`) with the wrong filename (`ClashX.dmg`). Corrected to `Clash-FX/ClashFX` with `ClashFX.dmg`. Auto-update should now work properly</li><li><strong>Fix update script</strong> — `update_appcast.sh` now requires EdDSA signature (mandatory for Sparkle 2.x), preserves version history instead of overwriting, and uses correct URLs</li><li><strong>Fix prelease channel</strong> — The "Prelease" update channel was pointing to the same feed as "Stable". It now uses a separate `appcast-prerelease.xml` feed</li><li><strong>Code cleanup</strong> — Renamed `AutoUpgardeManager` → `AutoUpgradeManager` (typo fix)</li></ul>
+  ]]></description>
+  <pubDate>Mon, 23 Mar 2026 13:22:35 +0000</pubDate>
+  <sparkle:version>1.0.1</sparkle:version>
+  <sparkle:shortVersionString>1.0.1</sparkle:shortVersionString>
+  <sparkle:minimumSystemVersion>10.14</sparkle:minimumSystemVersion>
+  <enclosure
+    url="https://github.com/Clash-FX/ClashFX/releases/download/1.0.1/ClashFX.dmg"
+    sparkle:version="1.0.1"
+    sparkle:shortVersionString="1.0.1"
+    sparkle:edSignature="P4B3UbpUaXb6Bc5y5BVSfzxqb2SbRlIgN38RxVXWVmtJhi7vT/LKjtuCYE1CuBS21MdCruY78VYMh0DadNM/Cw=="
+    length="94853679"
+    type="application/octet-stream"
+  />
+</item>
+    <item>
+  <title>Version 1.0.1</title>
+  <description><![CDATA[
+    <h2>ClashFX v1.0.1</h2><ul><li><strong>Fix status bar speed overflow</strong> — Network speed text (e.g. "4.22MB/s") no longer intrudes into the vertical separator line. The status item now dynamically resizes based on actual text width</li><li><strong>Fix auto-update system</strong> — All appcast download URLs were pointing to the wrong repository (`ClashX-Pro/ClashX`) with the wrong filename (`ClashX.dmg`). Corrected to `Clash-FX/ClashFX` with `ClashFX.dmg`. Auto-update should now work properly</li><li><strong>Fix update script</strong> — `update_appcast.sh` now requires EdDSA signature (mandatory for Sparkle 2.x), preserves version history instead of overwriting, and uses correct URLs</li><li><strong>Fix prelease channel</strong> — The "Prelease" update channel was pointing to the same feed as "Stable". It now uses a separate `appcast-prerelease.xml` feed</li><li><strong>Code cleanup</strong> — Renamed `AutoUpgardeManager` → `AutoUpgradeManager` (typo fix)</li></ul>
+  ]]></description>
+  <pubDate>Mon, 23 Mar 2026 12:55:36 +0000</pubDate>
+  <sparkle:version>1.0.1</sparkle:version>
+  <sparkle:shortVersionString>1.0.1</sparkle:shortVersionString>
+  <sparkle:minimumSystemVersion>10.14</sparkle:minimumSystemVersion>
+  <enclosure
+    url="https://github.com/Clash-FX/ClashFX/releases/download/1.0.1/ClashFX.dmg"
+    sparkle:version="1.0.1"
+    sparkle:shortVersionString="1.0.1"
+    sparkle:edSignature="leVcEKEF37c8xJHmSKDh1G6ofPwOURzx2cM+Rj6q//xj7V5TF7Bwo8Q47WsXSGJUWPE+Ch91PSrR/Cuz/pLnDg=="
+    length="94851511"
+    type="application/octet-stream"
+  />
+</item>
+    <item>
+  <title>Version 1.0.1</title>
+  <description><![CDATA[
+    <h2>ClashFX v1.0.1</h2><ul><li><strong>Fix status bar speed overflow</strong> — Network speed text (e.g. "4.22MB/s") no longer intrudes into the vertical separator line. The status item now dynamically resizes based on actual text width</li><li><strong>Fix auto-update system</strong> — All appcast download URLs were pointing to the wrong repository (`ClashX-Pro/ClashX`) with the wrong filename (`ClashX.dmg`). Corrected to `Clash-FX/ClashFX` with `ClashFX.dmg`. Auto-update should now work properly</li><li><strong>Fix update script</strong> — `update_appcast.sh` now requires EdDSA signature (mandatory for Sparkle 2.x), preserves version history instead of overwriting, and uses correct URLs</li><li><strong>Fix prelease channel</strong> — The "Prelease" update channel was pointing to the same feed as "Stable". It now uses a separate `appcast-prerelease.xml` feed</li><li><strong>Code cleanup</strong> — Renamed `AutoUpgardeManager` → `AutoUpgradeManager` (typo fix)</li></ul>
+  ]]></description>
+  <pubDate>Mon, 23 Mar 2026 12:05:06 +0000</pubDate>
+  <sparkle:version>1.0.1</sparkle:version>
+  <sparkle:shortVersionString>1.0.1</sparkle:shortVersionString>
+  <sparkle:minimumSystemVersion>10.14</sparkle:minimumSystemVersion>
+  <enclosure
+    url="https://github.com/Clash-FX/ClashFX/releases/download/1.0.1/ClashFX.dmg"
+    sparkle:version="1.0.1"
+    sparkle:shortVersionString="1.0.1"
+    sparkle:edSignature="gkpooah7k4Jr+J2VZFHCnpXUVsdurfR5VO69oEqLJrB7onlVfDV4/LuQ30flSxrHl52I0rCSXMEezvwsJiuVDg=="
+    length="94851465"
+    type="application/octet-stream"
+  />
+</item>
+
+  </channel>
+</rss>

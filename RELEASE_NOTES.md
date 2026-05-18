@@ -1,12 +1,12 @@
 ### Bug Fixes
 
-- **Selected Subscription Restored on Relaunch** — ClashFX now keeps the selected remote subscription/config visible after restart instead of temporarily falling back to `config` while the core is stopped. (#75)
-- **Enhanced Mode Startup Recovery Hardened** — Startup cleanup now targets only ClashFX-owned stale `mihomo_core` processes and avoids killing unrelated mihomo processes on the system. (#75)
-- **Quit Menu Remains Responsive** — During quit-time proxy/Enhanced Mode cleanup, the menu bar item now shows a disabled “Quitting…” menu instead of appearing unresponsive. (#75)
+- **Enhanced Mode Startup Readiness Hardened** — Enhanced Mode now waits until `/configs` reports a usable `mixed-port` or `port` before treating the external mihomo core as ready, avoiding the misleading "Ports Open Fail" popup when mihomo is already listening. (#75)
+- **Transient Port-Zero Retry** — ClashFX now retries `/configs` responses that temporarily report `port=0`, and reissues the request if the active API/config context changes during the retry window. (#75)
+- **Enhanced Mode Tray Highlight** — The menu bar icon now lights up when Enhanced Mode is active, even if the system proxy toggle is off. (#75)
 
 ---
 ### 修复
 
-- **重启后保留已选订阅** — ClashFX 重启后会继续显示已选中的远程订阅/配置，不再因为核心尚未运行而临时回退到 `config`。（#75）
-- **增强模式启动恢复更安全** — 启动清理现在只会处理 ClashFX 自己遗留的 `mihomo_core` 进程，避免误杀系统中的其他 mihomo 进程。（#75）
-- **退出清理时菜单保持可反馈** — 退出期间等待代理/增强模式清理时，状态栏菜单会显示不可点击的“Quitting…”提示，不再表现得像没有响应。（#75）
+- **增强模式启动就绪判断加固** — 增强模式现在会等待 `/configs` 返回可用的 `mixed-port` 或 `port` 后才认为外部 mihomo core 已就绪，避免 mihomo 已经监听端口时仍误弹“端口打开失败”。（#75）
+- **临时 port=0 自动重试** — ClashFX 现在会对 `/configs` 短暂返回 `port=0` 的情况进行退避重试；如果重试期间 API/配置上下文发生变化，会自动按最新上下文重新请求。（#75）
+- **增强模式图标高亮** — 菜单栏图标现在会在增强模式启用时变亮，不再必须开启“系统代理”才高亮。（#75）
