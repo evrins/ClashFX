@@ -112,9 +112,6 @@
 /* Class = "NSMenu"; title = "Help"; ObjectID = "ogW-pn-jeR"; */
 "ogW-pn-jeR.title" = "幫助";
 
-/* Class = "NSMenuItem"; title = "Check Update"; ObjectID = "p0T-J8-Emx"; */
-"p0T-J8-Emx.title" = "檢查更新";
-
 /* Class = "NSMenuItem"; title = "Reload config"; ObjectID = "q3G-VH-eyy"; */
 "q3G-VH-eyy.title" = "重載配置文件";
 
@@ -297,9 +294,6 @@
 
 /* Class = "NSButtonCell"; title = "Revert to previous proxy on proxy disabled"; ObjectID = "JOF-yU-YHc"; */
 "JOF-yU-YHc.title" = "停用代理后恢复先前的代理设置";
-
-/* Class = "NSTextFieldCell"; title = "Update Channel"; ObjectID = "NLt-OM-k6i"; */
-"NLt-OM-k6i.title" = "更新通道";
 
 /* Class = "NSTextFieldCell"; title = "Geo-IP Datebase"; ObjectID = "OMy-zu-iho"; */
 "OMy-zu-iho.title" = "Geo-IP 数据库";

@@ -12,13 +12,11 @@ import RxSwift
 class DebugSettingViewController: NSViewController {
     @IBOutlet var useBuiltinApiButton: NSButton!
     @IBOutlet var revertProxyButton: NSButton!
-    @IBOutlet var updateChannelPopButton: NSPopUpButton!
     var disposeBag = DisposeBag()
     override func viewDidLoad() {
         super.viewDidLoad()
         useBuiltinApiButton.state = Settings.builtInApiMode ? .on : .off
         revertProxyButton.state = Settings.disableRestoreProxy ? .off : .on
-        AutoUpgradeManager.shared.addChannelMenuItem(updateChannelPopButton)
     }
 
     @IBAction func actionUnInstallProxyHelper(_ sender: Any) {

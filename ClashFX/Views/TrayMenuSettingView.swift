@@ -112,7 +112,6 @@ class TrayMenuSettingView: NSView {
                 setter: { Settings.trayMenuShowHelp = $0 },
                 children: [
                     ItemRow(title: NSLocalizedString("About", comment: ""), getter: { Settings.trayMenuShowAbout }, setter: { Settings.trayMenuShowAbout = $0 }),
-                    ItemRow(title: NSLocalizedString("Check for Update", comment: ""), getter: { Settings.trayMenuShowCheckUpdate }, setter: { Settings.trayMenuShowCheckUpdate = $0 }),
                     ItemRow(title: NSLocalizedString("Log Level", comment: ""), getter: { Settings.trayMenuShowLogLevel }, setter: { Settings.trayMenuShowLogLevel = $0 }),
                     ItemRow(title: NSLocalizedString("Show Log", comment: ""), getter: { Settings.trayMenuShowShowLog }, setter: { Settings.trayMenuShowShowLog = $0 }),
                     ItemRow(title: NSLocalizedString("Ports", comment: ""), getter: { Settings.trayMenuShowPorts }, setter: { Settings.trayMenuShowPorts = $0 }),

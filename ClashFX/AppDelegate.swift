@@ -7,9 +7,6 @@
 //
 
 import Alamofire
-import AppCenter
-import AppCenterAnalytics
-import AppCenterCrashes
 import Cocoa
 import CocoaLumberjack
 import LetsMove
@@ -21,8 +18,6 @@ let statusItemLengthWithSpeed: CGFloat = 72
 @main
 class AppDelegate: NSObject, NSApplicationDelegate {
     private(set) var statusItem: NSStatusItem!
-    @IBOutlet var checkForUpdateMenuItem: NSMenuItem!
-
     @IBOutlet var statusMenu: NSMenu!
     @IBOutlet var proxySettingMenuItem: NSMenuItem!
     @IBOutlet var autoStartMenuItem: NSMenuItem!
@@ -141,9 +136,6 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         }
         setupLanguageMenu()
         setupConfigEditorMenuItem()
-        // 启用自动更新检查（使用fork项目的GitHub Pages）
-        AutoUpgradeManager.shared.setup()
-        AutoUpgradeManager.shared.setupCheckForUpdatesMenuItem(checkForUpdateMenuItem)
         // install proxy helper
         _ = ClashResourceManager.check()
         PrivilegedHelperManager.shared.checkInstall()
@@ -200,7 +192,6 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         RemoteConfigManager.shared.autoUpdateCheck()
 
         setupNetworkNotifier()
-        registCrashLogger()
         KeyboardShortCutManager.setup()
         RemoteControlManager.setupMenuItem(separator: externalControlSeparator)
         applyTrayMenuVisibility()
@@ -1450,23 +1441,9 @@ extension AppDelegate {
     }
 }
 
-// MARK: crash hanlder
+// MARK: launch protection
 
 extension AppDelegate {
-    func registCrashLogger() {
-        #if DEBUG
-            return
-        #else
-            DispatchQueue.main.asyncAfter(deadline: .now() + 5) {
-                AppCenter.start(withAppSecret: "dce6e9a3-b6e3-4fd2-9f2d-35c767a99663", services: [
-                    Analytics.self,
-                    Crashes.self
-                ])
-            }
-
-        #endif
-    }
-
     func failLaunchProtect() {
         #if DEBUG
             return
@@ -1712,10 +1689,9 @@ extension AppDelegate {
 
         // Help group
         let showHelp = Settings.trayMenuShowHelp
-        let anyHelpChild = Settings.trayMenuShowAbout || Settings.trayMenuShowCheckUpdate || Settings.trayMenuShowLogLevel || Settings.trayMenuShowShowLog || Settings.trayMenuShowPorts
+        let anyHelpChild = Settings.trayMenuShowAbout || Settings.trayMenuShowLogLevel || Settings.trayMenuShowShowLog || Settings.trayMenuShowPorts
         helpMenuItem.isHidden = !(showHelp && anyHelpChild)
         aboutMenuItem.isHidden = !(showHelp && Settings.trayMenuShowAbout)
-        checkForUpdateMenuItem.isHidden = !(showHelp && Settings.trayMenuShowCheckUpdate)
         logLevelMenuItem.isHidden = !(showHelp && Settings.trayMenuShowLogLevel)
         showLogMenuItem.isHidden = !(showHelp && Settings.trayMenuShowShowLog)
         portsMenuItem.isHidden = !(showHelp && Settings.trayMenuShowPorts)

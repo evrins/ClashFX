@@ -9,7 +9,7 @@
 import Foundation
 
 enum Settings {
-    // Must be MaxMind MMDB format (verifyGEOIPDataBase uses oschwald/geoip2-golang, which rejects mihomo's proprietary .metadb).
+    /// Must be MaxMind MMDB format (verifyGEOIPDataBase uses oschwald/geoip2-golang, which rejects mihomo's proprietary .metadb).
     static let defaultMmdbDownloadUrl = "https://github.com/MetaCubeX/meta-rules-dat/releases/latest/download/country.mmdb"
     @UserDefault("mmdbDownloadUrl", defaultValue: defaultMmdbDownloadUrl)
     static var mmdbDownloadUrl: String
@@ -177,9 +177,6 @@ enum Settings {
 
     @UserDefault("trayMenuShowAbout", defaultValue: true)
     static var trayMenuShowAbout: Bool
-
-    @UserDefault("trayMenuShowCheckUpdate", defaultValue: true)
-    static var trayMenuShowCheckUpdate: Bool
 
     @UserDefault("trayMenuShowLogLevel", defaultValue: true)
     static var trayMenuShowLogLevel: Bool

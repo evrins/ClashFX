@@ -94,9 +94,6 @@
 /* Class = "NSMenu"; title = "Help"; ObjectID = "ogW-pn-jeR"; */
 "ogW-pn-jeR.title" = "Помощь";
 
-/* Class = "NSMenuItem"; title = "Check Update"; ObjectID = "p0T-J8-Emx"; */
-"p0T-J8-Emx.title" = "Проверить обновления";
-
 /* Class = "NSMenuItem"; title = "Reload config"; ObjectID = "q3G-VH-eyy"; */
 "q3G-VH-eyy.title" = "Перезагрузить конфигурацию";
 
@@ -297,9 +294,6 @@
 
 /* Class = "NSButtonCell"; title = "Revert to previous proxy on proxy disabled"; ObjectID = "JOF-yU-YHc"; */
 "JOF-yU-YHc.title" = "Восстанавливать предыдущий прокси при отключении";
-
-/* Class = "NSTextFieldCell"; title = "Update Channel"; ObjectID = "NLt-OM-k6i"; */
-"NLt-OM-k6i.title" = "Канал обновлений";
 
 /* Class = "NSTextFieldCell"; title = "Geo-IP Datebase"; ObjectID = "OMy-zu-iho"; */
 "OMy-zu-iho.title" = "База данных Geo-IP";
