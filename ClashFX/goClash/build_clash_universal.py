@@ -46,6 +46,11 @@ def mergeLibs():
     subprocess.check_output(command, shell=True)
 
 
+def arm64OnlyLibs():
+    os.rename("goClash_arm64.h", "goClash.h")
+    os.rename("goClash_arm64.a", "goClash.a")
+
+
 def build_mihomo_bin(version, build_time, arch):
     command = f"""
 {go_bin} build -trimpath -tags with_gvisor -ldflags '-X "github.com/metacubex/mihomo/constant.Version={version}" \
@@ -65,6 +70,14 @@ def build_mihomo_bin(version, build_time, arch):
 def mergeMihomoBins():
     command = "lipo mihomo_core_arm64 mihomo_core_amd64 -create -output mihomo_core"
     subprocess.check_output(command, shell=True)
+    subprocess.check_output(
+        "codesign --sign - --force --identifier com.clashx.mihomo-core mihomo_core",
+        shell=True,
+    )
+
+
+def arm64OnlyMihomoBin():
+    os.rename("mihomo_core_arm64", "mihomo_core")
     subprocess.check_output(
         "codesign --sign - --force --identifier com.clashx.mihomo-core mihomo_core",
         shell=True,
@@ -98,16 +111,12 @@ def run():
     subprocess.check_output("rm -f *Clash*.h *.a mihomo_core_*", shell=True)
     print("create arm64 library")
     build_clash(version, build_time, "arm64")
-    print("create amd64 library")
-    build_clash(version, build_time, "amd64")
-    print("merge libraries")
-    mergeLibs()
+    print("prepare arm64-only library")
+    arm64OnlyLibs()
     print("create arm64 mihomo-bin")
     build_mihomo_bin(version, build_time, "arm64")
-    print("create amd64 mihomo-bin")
-    build_mihomo_bin(version, build_time, "amd64")
-    print("merge and codesign mihomo-bin")
-    mergeMihomoBins()
+    print("codesign arm64 mihomo-bin")
+    arm64OnlyMihomoBin()
     print("clean")
     clean()
     if os.environ.get("CI", False) or os.environ.get("GITHUB_ACTIONS", False):

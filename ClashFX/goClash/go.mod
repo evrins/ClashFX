@@ -1,8 +1,7 @@
 module github.com/yichengchen/clashX/ClashX
 
-go 1.22
+go 1.26
 
-toolchain go1.22.0
 
 require (
 	github.com/metacubex/bbolt v0.0.0-20250725135710-010dbbbb7a5b
