@@ -55,6 +55,11 @@ class ImagePickerView: NSView {
         // Subclasses can override to perform additional actions.
     }
 
+    /// Optional content inserted below the picker buttons.
+    func makeAdditionalContentView() -> NSView? {
+        nil
+    }
+
     // MARK: - Init
 
     override init(frame frameRect: NSRect) {
@@ -113,7 +118,12 @@ class ImagePickerView: NSView {
         buttonStack.alignment = .leading
         buttonStack.spacing = 6
 
-        let rightStack = NSStackView(views: [descriptionLabel, buttonStack])
+        var rightStackViews: [NSView] = [descriptionLabel, buttonStack]
+        if let additionalContentView = makeAdditionalContentView() {
+            rightStackViews.append(additionalContentView)
+        }
+
+        let rightStack = NSStackView(views: rightStackViews)
         rightStack.translatesAutoresizingMaskIntoConstraints = false
         rightStack.orientation = .vertical
         rightStack.alignment = .leading
@@ -263,11 +273,21 @@ class ImagePickerView: NSView {
         let destDir = destURL.deletingLastPathComponent()
 
         do {
+            guard let tiffData = image.tiffRepresentation,
+                  let bitmap = NSBitmapImageRep(data: tiffData),
+                  let pngData = bitmap.representation(using: .png, properties: [:]) else {
+                let alert = NSAlert()
+                alert.messageText = config.changeFailedText
+                alert.informativeText = NSLocalizedString("The file could not be converted to PNG.", comment: "")
+                alert.runModal()
+                return false
+            }
+
             try FileManager.default.createDirectory(at: destDir, withIntermediateDirectories: true)
             if FileManager.default.fileExists(atPath: destPath) {
                 try FileManager.default.removeItem(at: destURL)
             }
-            try FileManager.default.copyItem(at: srcURL, to: destURL)
+            try pngData.write(to: destURL, options: .atomic)
         } catch {
             let alert = NSAlert()
             alert.messageText = config.changeFailedText

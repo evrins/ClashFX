@@ -68,6 +68,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     var configEditorMenuItem: NSMenuItem?
     private var subscriptionStatusMenuItem: NSMenuItem?
     private var subscriptionStatusSeparator: NSMenuItem?
+    private weak var advancedTunMenuItem: NSMenuItem?
 
     var disposeBag = DisposeBag()
     var statusItemView: StatusItemViewProtocol!
@@ -111,6 +112,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         statusItem.menu = statusMenu
         AppLogoTool.applyLogo()
         setupStatusMenuItemData()
+        installAdvancedTunMenuItem()
         DispatchQueue.main.async {
             self.postFinishLaunching()
         }
@@ -795,80 +797,152 @@ extension AppDelegate {
         }
     }
 
+    private func installAdvancedTunMenuItem() {
+        let item = NSMenuItem(
+            title: NSLocalizedString("Advanced TUN Settings…", comment: ""),
+            action: #selector(showAdvancedTunSettings(_:)),
+            keyEquivalent: ""
+        )
+        item.target = self
+        let parentMenu = enhancedModeMenuItem.menu ?? statusMenu
+        let insertIndex = (parentMenu?.index(of: enhancedModeMenuItem) ?? -1) + 1
+        if let menu = parentMenu, insertIndex > 0 {
+            menu.insertItem(item, at: insertIndex)
+        } else {
+            statusMenu.addItem(item)
+        }
+        advancedTunMenuItem = item
+    }
+
+    @objc func showAdvancedTunSettings(_ sender: Any?) {
+        let alert = NSAlert()
+        alert.messageText = NSLocalizedString("Advanced TUN Settings", comment: "")
+        alert.informativeText = NSLocalizedString(
+            "MTU 1500 matches the real internet path; 4064 is the macOS utun ceiling. Pinning Interface avoids the macOS sleep/wake auto-detect bug. Toggle Enhanced Mode off then on to apply.",
+            comment: ""
+        )
+        alert.addButton(withTitle: NSLocalizedString("Apply", comment: ""))
+        alert.addButton(withTitle: NSLocalizedString("Cancel", comment: ""))
+
+        let mtuField = NSTextField(frame: NSRect(x: 0, y: 0, width: 280, height: 22))
+        mtuField.placeholderString = "1500"
+        mtuField.stringValue = "\(Settings.tunMTU)"
+
+        let mtuLabel = NSTextField(labelWithString: String(
+            format: NSLocalizedString("TUN MTU (%d–%d):", comment: ""),
+            Settings.minTunMTU, Settings.maxTunMTU
+        ))
+
+        let ifaceField = NSTextField(frame: NSRect(x: 0, y: 0, width: 280, height: 22))
+        ifaceField.placeholderString = "en0"
+        ifaceField.stringValue = Settings.tunInterfaceName
+
+        let ifaceLabel = NSTextField(labelWithString: NSLocalizedString(
+            "Interface (empty = auto-detect):",
+            comment: ""
+        ))
+
+        let stack = NSStackView(views: [mtuLabel, mtuField, ifaceLabel, ifaceField])
+        stack.orientation = .vertical
+        stack.alignment = .leading
+        stack.spacing = 6
+        stack.frame = NSRect(x: 0, y: 0, width: 300, height: 110)
+
+        alert.accessoryView = stack
+
+        guard alert.runModal() == .alertFirstButtonReturn else { return }
+
+        let trimmedMTU = mtuField.stringValue.trimmingCharacters(in: .whitespaces)
+        if let mtu = Int(trimmedMTU), mtu >= Settings.minTunMTU, mtu <= Settings.maxTunMTU {
+            Settings.tunMTU = mtu
+        } else if !trimmedMTU.isEmpty {
+            NSUserNotificationCenter.default.postConfigErrorNotice(
+                msg: NSLocalizedString("Invalid MTU. Kept previous value.", comment: "")
+            )
+        }
+        Settings.tunInterfaceName = ifaceField.stringValue.trimmingCharacters(
+            in: .whitespacesAndNewlines
+        )
+    }
+
     private func enableEnhancedMode(completion: @escaping (String?) -> Void) {
         let tempConfigPath = kConfigFolderPath + ".enhanced_config.yaml"
-        let selectedConfigPath = Paths.localConfigPath(for: ConfigManager.selectConfigName)
+        let selectedConfigName = ConfigManager.selectConfigName
 
-        DispatchQueue.global(qos: .userInitiated).async { [weak self] in
-            let writeResult = clashWriteEnhancedConfig(
-                selectedConfigPath.goStringBuffer(),
-                tempConfigPath.goStringBuffer(),
-                Settings.tunRouteExcludeList.joined(separator: ",").goStringBuffer()
-            )?.toString() ?? ""
+        ConfigManager.getConfigPath(configName: selectedConfigName) { selectedConfigPath in
+            DispatchQueue.global(qos: .userInitiated).async { [weak self] in
+                let writeResult = clashWriteEnhancedConfig(
+                    selectedConfigPath.goStringBuffer(),
+                    tempConfigPath.goStringBuffer(),
+                    Settings.tunRouteExcludeList.joined(separator: ",").goStringBuffer(),
+                    GoUint32(Settings.tunMTU),
+                    Settings.tunInterfaceName.goStringBuffer()
+                )?.toString() ?? ""
 
-            DispatchQueue.main.async {
-                guard let self = self else { return }
+                DispatchQueue.main.async {
+                    guard let self = self else { return }
 
-                guard !writeResult.hasPrefix("error:") else {
-                    completion(writeResult)
-                    return
-                }
+                    guard !writeResult.hasPrefix("error:") else {
+                        completion(writeResult)
+                        return
+                    }
 
-                guard let jsonData = writeResult.data(using: .utf8),
-                      let portInfo = try? JSONSerialization.jsonObject(with: jsonData) as? [String: String],
-                      let extController = portInfo["externalController"],
-                      let port = extController.components(separatedBy: ":").last else {
-                    completion(NSLocalizedString("Failed to parse enhanced config", comment: ""))
-                    return
-                }
-                let secret = portInfo["secret"] ?? ""
+                    guard let jsonData = writeResult.data(using: .utf8),
+                          let portInfo = try? JSONSerialization.jsonObject(with: jsonData) as? [String: String],
+                          let extController = portInfo["externalController"],
+                          let port = extController.components(separatedBy: ":").last else {
+                        completion(NSLocalizedString("Failed to parse enhanced config", comment: ""))
+                        return
+                    }
+                    let secret = portInfo["secret"] ?? ""
 
-                guard let binaryPath = Bundle.main.path(forResource: "mihomo_core", ofType: nil) else {
-                    completion(NSLocalizedString("mihomo_core not found", comment: ""))
-                    return
-                }
+                    guard let binaryPath = Bundle.main.path(forResource: "mihomo_core", ofType: nil) else {
+                        completion(NSLocalizedString("mihomo_core not found", comment: ""))
+                        return
+                    }
 
-                guard let helper = PrivilegedHelperManager.shared.helper() else {
-                    completion(NSLocalizedString("Helper not available", comment: ""))
-                    return
-                }
+                    guard let helper = PrivilegedHelperManager.shared.helper() else {
+                        completion(NSLocalizedString("Helper not available", comment: ""))
+                        return
+                    }
 
-                // Pause callbacks before suspending core to prevent error storms
-                clashPauseCallbacks()
-                clashSuspendCore()
+                    // Pause callbacks before suspending core to prevent error storms
+                    clashPauseCallbacks()
+                    clashSuspendCore()
 
-                helper.startMihomoCore(
-                    withBinaryPath: binaryPath,
-                    configPath: tempConfigPath,
-                    homeDir: kConfigFolderPath
-                ) { [weak self] error in
-                    DispatchQueue.main.async {
-                        if let error = error {
-                            clashResumeCallbacks()
-                            _ = clashResumeCore()
-                            completion(error)
-                        } else {
-                            ConfigManager.shared.apiPort = port
-                            ConfigManager.shared.apiSecret = secret
-                            ConfigManager.shared.isEnhancedModeActive = true
-                            self?.refreshStatusItemViewStatus()
-                            self?.waitForExternalCore(port: port, secret: secret, retriesLeft: 10) { success in
-                                if success {
-                                    clashResumeCallbacks()
-                                    self?.verifyTunStatus(port: port, secret: secret)
-                                    self?.overrideDNSForTun()
-                                    completion(nil)
-                                } else {
-                                    Logger.log("External core failed to start, rolling back", level: .error)
-                                    helper.stopMihomoCore { _ in
-                                        DispatchQueue.main.async {
-                                            ConfigManager.shared.isEnhancedModeActive = false
-                                            ConfigManager.shared.isRunning = false
-                                            self?.refreshStatusItemViewStatus()
-                                            clashReopenCacheDB()
-                                            clashResumeCallbacks()
-                                            self?.startProxy()
-                                            completion(NSLocalizedString("Enhanced Mode failed: core not responding", comment: ""))
+                    helper.startMihomoCore(
+                        withBinaryPath: binaryPath,
+                        configPath: tempConfigPath,
+                        homeDir: kConfigFolderPath
+                    ) { [weak self] error in
+                        DispatchQueue.main.async {
+                            if let error = error {
+                                clashResumeCallbacks()
+                                _ = clashResumeCore()
+                                completion(error)
+                            } else {
+                                ConfigManager.shared.apiPort = port
+                                ConfigManager.shared.apiSecret = secret
+                                ConfigManager.shared.isEnhancedModeActive = true
+                                self?.refreshStatusItemViewStatus()
+                                self?.waitForExternalCore(port: port, secret: secret, retriesLeft: 10) { success in
+                                    if success {
+                                        clashResumeCallbacks()
+                                        self?.verifyTunStatus(port: port, secret: secret)
+                                        self?.overrideDNSForTun()
+                                        completion(nil)
+                                    } else {
+                                        Logger.log("External core failed to start, rolling back", level: .error)
+                                        helper.stopMihomoCore { _ in
+                                            DispatchQueue.main.async {
+                                                ConfigManager.shared.isEnhancedModeActive = false
+                                                ConfigManager.shared.isRunning = false
+                                                self?.refreshStatusItemViewStatus()
+                                                clashReopenCacheDB()
+                                                clashResumeCallbacks()
+                                                self?.startProxy()
+                                                completion(NSLocalizedString("Enhanced Mode failed: core not responding", comment: ""))
+                                            }
                                         }
                                     }
                                 }
@@ -1668,6 +1742,7 @@ extension AppDelegate {
         let showProxyActions = Settings.trayMenuShowProxyActions
         proxySettingMenuItem.isHidden = !(showProxyActions && Settings.trayMenuShowSystemProxy)
         enhancedModeMenuItem.isHidden = !(showProxyActions && Settings.trayMenuShowEnhancedMode)
+        advancedTunMenuItem?.isHidden = enhancedModeMenuItem.isHidden
         let showCopy = showProxyActions && Settings.trayMenuShowCopyShellCmd
         copyExportCommandMenuItem.isHidden = !showCopy
         copyExportCommandExternalMenuItem.isHidden = !showCopy

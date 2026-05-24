@@ -9,6 +9,8 @@
 import Cocoa
 
 class SettingTabViewController: NSTabViewController, NibLoadable {
+    private let windowScreenPadding: CGFloat = 80
+
     override func viewDidLoad() {
         super.viewDidLoad()
         if #available(macOS 15, *) {
@@ -61,15 +63,24 @@ class SettingTabViewController: NSTabViewController, NibLoadable {
         super.tabView(tabView, didSelect: tabViewItem)
         guard let window = view.window,
               let vc = tabViewItem?.viewController else { return }
-        let contentSize = vc.preferredContentSize.height > 0
+        var contentSize = vc.preferredContentSize.height > 0
             ? vc.preferredContentSize
             : vc.view.frame.size
         guard contentSize.height > 0 else { return }
+        contentSize.height = min(contentSize.height, maximumContentHeight(for: window))
         let newFrame = window.frameRect(forContentRect: NSRect(origin: .zero, size: contentSize))
         var frame = window.frame
         frame.origin.y += frame.height - newFrame.height
         frame.size.height = newFrame.height
-        window.setFrame(frame, display: true, animate: true)
+        if let visibleFrame = window.screen?.visibleFrame, frame.minY < visibleFrame.minY + 12 {
+            frame.origin.y = visibleFrame.minY + 12
+        }
+        window.setFrame(frame, display: true, animate: false)
+    }
+
+    private func maximumContentHeight(for window: NSWindow) -> CGFloat {
+        guard let visibleFrame = window.screen?.visibleFrame else { return 620 }
+        return max(360, visibleFrame.height - windowScreenPadding)
     }
 
     private func insertAppearanceTab() {

@@ -486,3 +486,36 @@
 
 /* Tray Menu Settings hint */
 "Show or hide items in the tray menu." = "Show or hide items in the tray menu.";
+
+/* App icon picker */
+"Built-in app icons" = "Built-in app icons";
+"FX Portal" = "FX Portal";
+"FX Frost" = "FX Frost";
+"Classic Face" = "Classic Face";
+"Classic Sitting" = "Classic Sitting";
+"Flat Blue" = "Flat Blue";
+"The file could not be converted to PNG." = "The file could not be converted to PNG.";
+"App logo changed" = "App logo changed";
+"Dock and Finder may need a moment to refresh the app icon." = "Dock and Finder may need a moment to refresh the app icon.";
+"macOS did not allow changing the app bundle icon. If you are running from Xcode, try testing a copied app bundle." = "macOS did not allow changing the app bundle icon. If you are running from Xcode, try testing a copied app bundle.";
+"Running from Xcode only updates the current Dock icon. Copy the app bundle out of DerivedData to test Finder icon changes." = "Running from Xcode only updates the current Dock icon. Copy the app bundle out of DerivedData to test Finder icon changes.";
+"Running from Xcode only updates the current Dock icon. Copy a Release app bundle out of DerivedData to test Finder icon changes." = "Running from Xcode only updates the current Dock icon. Copy a Release app bundle out of DerivedData to test Finder icon changes.";
+"Dock changed for this session, but this app bundle cannot persist Finder icon changes." = "Dock changed for this session, but this app bundle cannot persist Finder icon changes.";
+"Default" = "Default";
+
+/* Menu bar icon picker */
+"Built-in menu bar icons" = "Built-in menu bar icons";
+"Lightning Cat" = "Lightning Cat";
+"Network Nodes" = "Network Nodes";
+"Linked Nodes" = "Linked Nodes";
+"Shield Cat" = "Shield Cat";
+"Bolt Outline" = "Bolt Outline";
+
+/* Advanced TUN Settings */
+"Advanced TUN Settings…" = "Advanced TUN Settings…";
+"Advanced TUN Settings" = "Advanced TUN Settings";
+"MTU 1500 matches the real internet path; 4064 is the macOS utun ceiling. Pinning Interface avoids the macOS sleep/wake auto-detect bug. Toggle Enhanced Mode off then on to apply." = "MTU 1500 matches the real internet path; 4064 is the macOS utun ceiling. Pinning Interface avoids the macOS sleep/wake auto-detect bug. Toggle Enhanced Mode off then on to apply.";
+"Apply" = "Apply";
+"TUN MTU (%d–%d):" = "TUN MTU (%d–%d):";
+"Interface (empty = auto-detect):" = "Interface (empty = auto-detect):";
+"Invalid MTU. Kept previous value." = "Invalid MTU. Kept previous value.";
