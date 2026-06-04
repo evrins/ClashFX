@@ -162,8 +162,6 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         setupLanguageMenu()
         setupConfigEditorMenuItem()
         // 启用自动更新检查（使用fork项目的GitHub Pages）
-        AutoUpgradeManager.shared.setup()
-        AutoUpgradeManager.shared.setupCheckForUpdatesMenuItem(checkForUpdateMenuItem)
         installLabHelpMenuItems()
         // install proxy helper
         _ = ClashResourceManager.check()
@@ -1001,18 +999,6 @@ extension AppDelegate {
         parent.addItem(crashLogs)
         labHelpMenuItems.append(crashLogs)
         labCrashLogsMenuItem = crashLogs
-
-        if AutoUpgradeManager.isLabBuild {
-            let rollback = NSMenuItem(
-                title: NSLocalizedString("Roll Back to Stable…", comment: ""),
-                action: #selector(actionLabRollback(_:)),
-                keyEquivalent: ""
-            )
-            rollback.target = self
-            parent.addItem(rollback)
-            labHelpMenuItems.append(rollback)
-            labRollbackMenuItem = rollback
-        }
     }
 
     @objc private func actionLabSendFeedback(_ sender: Any) {
@@ -2173,7 +2159,7 @@ extension AppDelegate {
         let crashLogsVisible = showHelp && Settings.trayMenuShowCrashLogs && labCrashLogsMenuItem != nil
         let rollbackVisible = showHelp && Settings.trayMenuShowRollback && labRollbackMenuItem != nil
         let anyLabHelpChild = feedbackVisible || copyDiagVisible || crashLogsVisible || rollbackVisible
-        let anyHelpChild = Settings.trayMenuShowAbout || Settings.trayMenuShowCheckUpdate || Settings.trayMenuShowLogLevel || Settings.trayMenuShowShowLog || Settings.trayMenuShowPorts || anyLabHelpChild
+        let anyHelpChild = Settings.trayMenuShowAbout || Settings.trayMenuShowLogLevel || Settings.trayMenuShowShowLog || Settings.trayMenuShowPorts || anyLabHelpChild
         helpMenuItem.isHidden = !(showHelp && anyHelpChild)
         aboutMenuItem.isHidden = !(showHelp && Settings.trayMenuShowAbout)
         logLevelMenuItem.isHidden = !(showHelp && Settings.trayMenuShowLogLevel)

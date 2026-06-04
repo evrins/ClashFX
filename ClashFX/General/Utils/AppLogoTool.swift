@@ -102,7 +102,7 @@ enum AppLogoTool {
         let bundlePath = Bundle.main.bundlePath
         let didSetIcon: Bool
         let baseIcon = loadSelectedLogo() ?? originalDefaultIcon
-        let finalIcon = AutoUpgradeManager.shouldShowLabBadge ? addLabBadge(to: baseIcon) : loadSelectedLogo()
+        let finalIcon = loadSelectedLogo()
 
         if let finalIcon {
             NSApp.applicationIconImage = finalIcon
