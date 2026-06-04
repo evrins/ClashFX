@@ -28,6 +28,25 @@
 
 Download from the [Releases](https://github.com/Clash-FX/ClashFX/releases) page.
 
+### 🧪 Update Channels: Stable & Lab
+
+> The Lab channel has been live since **v1.1.0**. Stable remains the default and recommended choice; opt into Lab in `Settings → Debug → Update Channel → Lab (Experimental)` if you're on v1.1.0+.
+
+ClashFX ships through two update channels. You can choose either — both are first-class.
+
+| | 🟢 Stable | 🟠 Lab |
+|---|---|---|
+| **Default** | ✅ | — |
+| **Release cadence** | Every 2–7 days, when fixes accumulate | As soon as a fix lands — sometimes daily |
+| **What you get** | Tested fixes only | Latest fixes + occasional experimental features |
+| **Visual badge** | None | Small orange dot on the top-right of the Dock / Applications icon |
+
+**Opt into Lab**: open `ClashFX → Settings → Debug → Update Channel → Lab (Experimental)` and confirm. The orange dot appears immediately. You can switch back to Stable from the same place at any time.
+
+**Found a Lab bug?** Use `Help → Send Feedback…` to open a pre-filled GitHub issue (diagnostic info auto-attached and redacted), or `Help → Copy Diagnostic Info…` to copy the report manually.
+
+Stable users: you're already on the recommended channel — nothing to change.
+
 ## 🔨 Build from Source
 
 ### Prerequisites
@@ -84,6 +103,18 @@ ClashFX's core feature — TUN-based global proxy that captures all TCP/UDP traf
   ```
   clash://update-config
   ```
+
+## 🤝 Companion Repo: cn-apps-direct
+
+The **"Bypass Common Chinese Apps"** toggle (added in v1.0.38, under Enhanced Mode) reads its `PROCESS-NAME` rule list from **[Clash-FX/cn-apps-direct](https://github.com/Clash-FX/cn-apps-direct)** — a small community-maintained repo of macOS executable names for high-frequency Chinese apps (WeChat, QQ, DingTalk, Feishu, Bilibili, etc.). The list updates automatically every 24 hours via `rule-provider`, decoupled from the ClashFX release cycle.
+
+**Want to add an app or fix a wrong process name?** PRs are welcome — see [CONTRIBUTING.md](https://github.com/Clash-FX/cn-apps-direct/blob/main/CONTRIBUTING.md). Adding an entry takes about a minute:
+
+```bash
+ls /Applications/<App>.app/Contents/MacOS/   # verify the actual executable name
+# append the verified name as: PROCESS-NAME,<name>,DIRECT
+# open a PR
+```
 
 ## 📄 License
 

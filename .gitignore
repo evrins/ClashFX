@@ -27,6 +27,10 @@ gitupdate.bat
 # Claude Code local settings
 .claude/settings.local.json
 
+# AI agent tool directories
+.sisyphus/
+.playwright-mcp/
+
 # Backup files
 *.bak
 

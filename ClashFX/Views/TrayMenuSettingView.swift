@@ -64,6 +64,8 @@ class TrayMenuSettingView: NSView {
                 children: [
                     ItemRow(title: NSLocalizedString("System Proxy", comment: ""), getter: { Settings.trayMenuShowSystemProxy }, setter: { Settings.trayMenuShowSystemProxy = $0 }),
                     ItemRow(title: NSLocalizedString("Enhanced Mode", comment: ""), getter: { Settings.trayMenuShowEnhancedMode }, setter: { Settings.trayMenuShowEnhancedMode = $0 }),
+                    ItemRow(title: NSLocalizedString("Advanced TUN Settings…", comment: ""), getter: { Settings.trayMenuShowAdvancedTun }, setter: { Settings.trayMenuShowAdvancedTun = $0 }),
+                    ItemRow(title: NSLocalizedString("Bypass Common Chinese Apps", comment: ""), getter: { Settings.trayMenuShowBypassChineseApps }, setter: { Settings.trayMenuShowBypassChineseApps = $0 }),
                     ItemRow(title: NSLocalizedString("Copy Shell Command", comment: ""), getter: { Settings.trayMenuShowCopyShellCmd }, setter: { Settings.trayMenuShowCopyShellCmd = $0 }),
                 ]
             )),
@@ -115,7 +117,12 @@ class TrayMenuSettingView: NSView {
                     ItemRow(title: NSLocalizedString("Log Level", comment: ""), getter: { Settings.trayMenuShowLogLevel }, setter: { Settings.trayMenuShowLogLevel = $0 }),
                     ItemRow(title: NSLocalizedString("Show Log", comment: ""), getter: { Settings.trayMenuShowShowLog }, setter: { Settings.trayMenuShowShowLog = $0 }),
                     ItemRow(title: NSLocalizedString("Ports", comment: ""), getter: { Settings.trayMenuShowPorts }, setter: { Settings.trayMenuShowPorts = $0 }),
-                ]
+                    ItemRow(title: NSLocalizedString("Send Feedback…", comment: ""), getter: { Settings.trayMenuShowFeedback }, setter: { Settings.trayMenuShowFeedback = $0 }),
+                    ItemRow(title: NSLocalizedString("Copy Diagnostic Info…", comment: ""), getter: { Settings.trayMenuShowCopyDiagnostic }, setter: { Settings.trayMenuShowCopyDiagnostic = $0 }),
+                    ItemRow(title: NSLocalizedString("Open Crash Log Folder", comment: ""), getter: { Settings.trayMenuShowCrashLogs }, setter: { Settings.trayMenuShowCrashLogs = $0 }),
+                ] + (AutoUpgradeManager.isLabBuild ? [
+                    ItemRow(title: NSLocalizedString("Roll Back to Stable…", comment: ""), getter: { Settings.trayMenuShowRollback }, setter: { Settings.trayMenuShowRollback = $0 }),
+                ] : [])
             )),
         ]
     }

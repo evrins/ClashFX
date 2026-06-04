@@ -101,12 +101,13 @@ enum AppLogoTool {
     static func applyLogo() -> Bool {
         let bundlePath = Bundle.main.bundlePath
         let didSetIcon: Bool
+        let baseIcon = loadSelectedLogo() ?? originalDefaultIcon
+        let finalIcon = AutoUpgradeManager.shouldShowLabBadge ? addLabBadge(to: baseIcon) : loadSelectedLogo()
 
-        if let selectedLogo = loadSelectedLogo() {
-            NSApp.applicationIconImage = selectedLogo
-            didSetIcon = canPersistBundleIcon ? NSWorkspace.shared.setIcon(selectedLogo, forFile: bundlePath) : true
+        if let finalIcon {
+            NSApp.applicationIconImage = finalIcon
+            didSetIcon = canPersistBundleIcon ? NSWorkspace.shared.setIcon(finalIcon, forFile: bundlePath) : true
         } else {
-            // nil restores the default icon from the asset catalog
             NSApp.applicationIconImage = nil
             didSetIcon = canPersistBundleIcon ? NSWorkspace.shared.setIcon(nil, forFile: bundlePath) : true
         }
@@ -117,6 +118,32 @@ enum AppLogoTool {
         NSWorkspace.shared.noteFileSystemChanged(bundlePath)
         refreshIconAppearanceCache()
         return didSetIcon
+    }
+
+    private static func addLabBadge(to icon: NSImage) -> NSImage {
+        let canvas = NSSize(width: 1024, height: 1024)
+        let result = NSImage(size: canvas)
+        result.lockFocus()
+        defer { result.unlockFocus() }
+
+        icon.draw(in: NSRect(origin: .zero, size: canvas))
+
+        let dotDiameter: CGFloat = 112
+        let inset: CGFloat = 142
+        let dotRect = NSRect(
+            x: canvas.width - inset - dotDiameter,
+            y: canvas.height - inset - dotDiameter,
+            width: dotDiameter,
+            height: dotDiameter
+        )
+        let dot = NSBezierPath(ovalIn: dotRect)
+        NSColor.systemOrange.setFill()
+        dot.fill()
+        NSColor.white.setStroke()
+        dot.lineWidth = 24
+        dot.stroke()
+
+        return result
     }
 
     private static func refreshIconAppearanceCache() {

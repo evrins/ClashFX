@@ -56,10 +56,18 @@ var (
 	tunInterfaceName string = ""
 	tunMu            sync.Mutex
 	savedUIPath      string
-	callbacksPaused  int32 // atomic: 0=active, 1=paused
+	callbacksPaused  int32        // atomic: 0=active, 1=paused
+	userTunStackRaw  atomic.Value // string; race-free across config reload vs enhanced-mode toggle
 )
 
 const defaultTunMTU uint32 = 1500
+const enhancedControllerPort = 19090
+
+var enhancedCoreProcessDirectRules = []string{
+	"PROCESS-NAME,mihomo,DIRECT",
+	"PROCESS-NAME,mihomo-bin,DIRECT",
+	"PROCESS-NAME,mihomo_core,DIRECT",
+}
 
 func isAddrValid(addr string) bool {
 	if addr != "" {
@@ -136,7 +144,57 @@ func parseEntryAsPrefix(s string) (netip.Prefix, bool) {
 		}
 		return netip.PrefixFrom(ip, bits), true
 	}
+	if prefix, ok := legacyWildcardTunRouteExcludePrefix(s); ok {
+		return prefix, true
+	}
 	return netip.Prefix{}, false
+}
+
+func legacyWildcardTunRouteExcludePrefix(s string) (netip.Prefix, bool) {
+	switch s {
+	case "10.*":
+		prefix, _ := netip.ParsePrefix("10.0.0.0/8")
+		return prefix, true
+	case "192.168.*":
+		prefix, _ := netip.ParsePrefix("192.168.0.0/16")
+		return prefix, true
+	}
+
+	if !strings.HasPrefix(s, "172.") || !strings.HasSuffix(s, ".*") {
+		return netip.Prefix{}, false
+	}
+	parts := strings.Split(s, ".")
+	if len(parts) != 3 {
+		return netip.Prefix{}, false
+	}
+	secondOctet, err := strconv.Atoi(parts[1])
+	if err != nil || secondOctet < 16 || secondOctet > 31 {
+		return netip.Prefix{}, false
+	}
+	prefix, _ := netip.ParsePrefix(fmt.Sprintf("172.%d.0.0/16", secondOctet))
+	return prefix, true
+}
+
+func isTunFakeIPFilterEntry(s string) bool {
+	if s == "" || strings.ContainsAny(s, " \t/") {
+		return false
+	}
+	name := strings.TrimPrefix(strings.TrimPrefix(s, "*."), "+.")
+	if name == "" {
+		return false
+	}
+	for _, label := range strings.Split(name, ".") {
+		if label == "" || strings.HasPrefix(label, "-") || strings.HasSuffix(label, "-") {
+			return false
+		}
+		for _, r := range label {
+			if (r >= 'a' && r <= 'z') || (r >= 'A' && r <= 'Z') || (r >= '0' && r <= '9') || r == '-' {
+				continue
+			}
+			return false
+		}
+	}
+	return true
 }
 
 func splitTunRouteExcludeEntries(raw string) ([]netip.Prefix, []string, []string) {
@@ -153,7 +211,7 @@ func splitTunRouteExcludeEntries(raw string) ([]netip.Prefix, []string, []string
 			prefixes = append(prefixes, prefix)
 			continue
 		}
-		if strings.Contains(entry, ".") || strings.HasPrefix(entry, "*.") || strings.HasPrefix(entry, "+.") {
+		if isTunFakeIPFilterEntry(entry) {
 			domains = append(domains, entry)
 			continue
 		}
@@ -220,6 +278,51 @@ func mergeInterfaceSlice(base interface{}, additions []string) []interface{} {
 	return result
 }
 
+func prependUniqueRules(rawMap map[string]interface{}, additions []string) {
+	existingRules, _ := rawMap["rules"].([]interface{})
+	newRules := make([]interface{}, 0, len(existingRules)+len(additions))
+	for _, rule := range additions {
+		if !interfaceSliceContainsString(existingRules, rule) {
+			newRules = append(newRules, rule)
+		}
+	}
+	newRules = append(newRules, existingRules...)
+	rawMap["rules"] = newRules
+}
+
+func interfaceSliceContainsString(items []interface{}, target string) bool {
+	for _, item := range items {
+		if rule, ok := item.(string); ok && rule == target {
+			return true
+		}
+	}
+	return false
+}
+
+func lockEnhancedLanBinding(rawMap map[string]interface{}) {
+	if allowLan, _ := rawMap["allow-lan"].(bool); allowLan {
+		return
+	}
+	rawMap["allow-lan"] = false
+	rawMap["bind-address"] = "127.0.0.1"
+}
+
+// resolveTunStack returns a valid mihomo TUN stack string.
+// It respects an explicit user choice (case-insensitive: system/gvisor/mixed)
+// and falls back to "mixed" (ClashFX default) when empty or invalid.
+func resolveTunStack(userValue string) string {
+	switch strings.ToLower(strings.TrimSpace(userValue)) {
+	case "system":
+		return "system"
+	case "gvisor":
+		return "gvisor"
+	case "mixed":
+		return "mixed"
+	default:
+		return "mixed"
+	}
+}
+
 func mergePrefixInterfaceSlice(base interface{}, additions []netip.Prefix) []interface{} {
 	var existing []netip.Prefix
 	switch value := base.(type) {
@@ -283,8 +386,29 @@ func getRawCfg() (*config.RawConfig, error) {
 	if err != nil {
 		return nil, err
 	}
-
+	userTunStackRaw.Store(extractRawTunStack(buf))
 	return config.UnmarshalRawConfig(buf)
+}
+
+// extractRawTunStack reads tun.stack as a raw string from config bytes,
+// returning "" when absent.
+func extractRawTunStack(buf []byte) string {
+	var probe map[string]interface{}
+	if err := yaml.Unmarshal(buf, &probe); err != nil {
+		return ""
+	}
+	tun, ok := probe["tun"].(map[string]interface{})
+	if !ok {
+		return ""
+	}
+	stack, _ := tun["stack"].(string)
+	return stack
+}
+
+// loadUserTunStackRaw returns the last raw tun.stack string captured by getRawCfg.
+func loadUserTunStackRaw() string {
+	s, _ := userTunStackRaw.Load().(string)
+	return s
 }
 
 func parseDefaultConfigThenStart(checkPort, allowLan, ipv6 bool, proxyPort uint32, externalController string) (*config.Config, error) {
@@ -388,7 +512,9 @@ func parseDefaultConfigThenStart(checkPort, allowLan, ipv6 bool, proxyPort uint3
 // Must be called while tunMu is held.
 func applyTunConfig(rawCfg *config.RawConfig) {
 	rawCfg.Tun.Enable = true
-	rawCfg.Tun.Stack = constant.TunMixed
+	if err := (&rawCfg.Tun.Stack).UnmarshalText([]byte(resolveTunStack(loadUserTunStackRaw()))); err != nil {
+		rawCfg.Tun.Stack = constant.TunMixed
+	}
 	rawCfg.Tun.AutoRoute = true
 	rawCfg.Tun.StrictRoute = true
 	rawCfg.Tun.DNSHijack = []string{"any:53", "tcp://any:53"}
@@ -865,7 +991,7 @@ func clashResumeCore() *C.char {
 }
 
 //export clashWriteEnhancedConfig
-func clashWriteEnhancedConfig(configPath *C.char, outputPath *C.char, tunRouteExcludeList *C.char, tunMTUParam C.uint, tunInterfaceNameParam *C.char) *C.char {
+func clashWriteEnhancedConfig(configPath *C.char, outputPath *C.char, tunRouteExcludeList *C.char, tunMTUParam C.uint, tunInterfaceNameParam *C.char, bypassCnApps C.int) *C.char {
 	excludeRaw := C.GoString(tunRouteExcludeList)
 	ifaceName := strings.TrimSpace(C.GoString(tunInterfaceNameParam))
 	mtuParam := uint32(tunMTUParam)
@@ -893,9 +1019,15 @@ func clashWriteEnhancedConfig(configPath *C.char, outputPath *C.char, tunRouteEx
 		return C.CString("error:" + err.Error())
 	}
 
+	userTunStack := ""
+	if existingTun, ok := rawMap["tun"].(map[string]interface{}); ok {
+		if s, ok := existingTun["stack"].(string); ok {
+			userTunStack = s
+		}
+	}
 	rawMap["tun"] = map[string]interface{}{
 		"enable":                true,
-		"stack":                 "mixed",
+		"stack":                 resolveTunStack(userTunStack),
 		"auto-route":            true,
 		"auto-detect-interface": ifaceName == "",
 		"strict-route":          true,
@@ -944,11 +1076,17 @@ func clashWriteEnhancedConfig(configPath *C.char, outputPath *C.char, tunRouteEx
 		rawMap["tun"] = tunMap
 	}
 
-	if port, err := freeport.GetFreePort(); err == nil {
-		rawMap["external-controller"] = "127.0.0.1:" + strconv.Itoa(port)
-	} else {
-		rawMap["external-controller"] = "127.0.0.1:19090"
+	// Pin a stable controller port so the Yacd dashboard origin
+	// (127.0.0.1:PORT) stays constant across launches; otherwise its
+	// per-origin localStorage (theme, columns) resets every time. Fall back
+	// to a random free port only if the stable port is already taken.
+	ecPort := enhancedControllerPort
+	if !checkPortAvailable(ecPort) {
+		if p, err := freeport.GetFreePort(); err == nil {
+			ecPort = p
+		}
 	}
+	rawMap["external-controller"] = "127.0.0.1:" + strconv.Itoa(ecPort)
 	ec := rawMap["external-controller"].(string)
 
 	if secretOverride != "" {
@@ -958,6 +1096,7 @@ func clashWriteEnhancedConfig(configPath *C.char, outputPath *C.char, tunRouteEx
 	if savedUIPath != "" {
 		rawMap["external-ui"] = savedUIPath
 	}
+	lockEnhancedLanBinding(rawMap)
 
 	profile, _ := rawMap["profile"].(map[string]interface{})
 	if profile == nil {
@@ -967,6 +1106,28 @@ func clashWriteEnhancedConfig(configPath *C.char, outputPath *C.char, tunRouteEx
 	rawMap["profile"] = profile
 
 	ensureDefaultProxyPort(rawMap)
+
+	if bypassCnApps != 0 {
+		providers, _ := rawMap["rule-providers"].(map[string]interface{})
+		if providers == nil {
+			providers = map[string]interface{}{}
+		}
+		providers["clashfx-cn-apps-direct"] = map[string]interface{}{
+			"type":     "http",
+			"behavior": "classical",
+			"url":      "https://raw.githubusercontent.com/Clash-FX/cn-apps-direct/main/apps-direct.list",
+			"path":     "./ruleset/clashfx-cn-apps-direct.list",
+			"interval": 86400,
+		}
+		rawMap["rule-providers"] = providers
+
+		existingRules, _ := rawMap["rules"].([]interface{})
+		newRules := make([]interface{}, 0, len(existingRules)+1)
+		newRules = append(newRules, "RULE-SET,clashfx-cn-apps-direct,DIRECT")
+		newRules = append(newRules, existingRules...)
+		rawMap["rules"] = newRules
+	}
+	prependUniqueRules(rawMap, enhancedCoreProcessDirectRules)
 
 	data, err := yaml.Marshal(rawMap)
 	if err != nil {

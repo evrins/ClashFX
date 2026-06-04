@@ -28,6 +28,25 @@
 
 從 [Releases](https://github.com/Clash-FX/ClashFX/releases) 頁面下載。
 
+### 🧪 更新通道:正式版與實驗室版
+
+> 實驗室版（Lab）自 **v1.1.0** 起已上線。正式版（Stable）仍是預設與推薦通道；如果你在 v1.1.0+，可於 `設定 → 偵錯 → 更新通道 → 實驗室版（Lab）` 切換。
+
+ClashFX 提供兩條更新通道,你可以自由選擇。
+
+| | 🟢 正式版 (Stable) | 🟠 實驗室版 (Lab) |
+|---|---|---|
+| **預設** | ✅ | — |
+| **更新頻率** | 通常每 2–7 天累積一批修復後發布 | 修復一落地就推送,可能每天都有 |
+| **包含內容** | 經過測試的修復 | 最新修復 + 偶有實驗性功能 |
+| **視覺標識** | 無 | Dock / 應用程式裡的 app 圖示右上角有橘色小圓點 |
+
+**加入實驗室版**:開啟 `ClashFX → 設定 → 調試 → 更新通道 → 實驗室版 (Lab)` 並確認。橘色小圓點會立刻出現。任何時候都可以從同樣的路徑切回正式版。
+
+**實驗室版遇到問題?** 在 `說明 → 回饋問題…` 中打開預填好的 GitHub Issue(診斷資訊自動附上並脫敏),或 `說明 → 複製診斷資訊…` 手動複製報告。
+
+正式版使用者:你已經在推薦的通道上,無需任何操作。
+
 ## 🔨 從原始碼建置
 
 ### 環境需求
@@ -84,6 +103,18 @@ ClashFX 的核心功能 — 基於 TUN 的全域代理，擷取所有應用程�
   ```
   clash://update-config
   ```
+
+## 🤝 配套儲存庫：cn-apps-direct
+
+v1.0.38 新增的 **「Bypass Common Chinese Apps」（增強模式 → 國內 App 直連）** 開關會從 **[Clash-FX/cn-apps-direct](https://github.com/Clash-FX/cn-apps-direct)** 拉取 `PROCESS-NAME` 規則清單，這是社群共同維護的國內高頻 macOS 客戶端可執行檔名列表（微信、QQ、釘釘、飛書、嗶哩嗶哩等）。清單透過 `rule-provider` 每 24 小時自動更新，與 ClashFX 發版週期解耦。
+
+**想新增 App 或修正錯誤的程序名？** 歡迎提 PR——參考 [CONTRIBUTING.md](https://github.com/Clash-FX/cn-apps-direct/blob/main/CONTRIBUTING.md)。新增一筆大約一分鐘：
+
+```bash
+ls /Applications/<App>.app/Contents/MacOS/   # 驗證實際可執行檔名
+# 把驗證後的名字追加為: PROCESS-NAME,<name>,DIRECT
+# 開 PR
+```
 
 ## 📄 授權條款
 

@@ -124,12 +124,9 @@ class RemoteControlManager {
     }
 
     static func updateDropDownMenuItems() {
-        let d = AppDelegate.shared
-        let enable = selectConfig == nil
-        d.statusMenu.autoenablesItems = enable
-        for item in [d.copyExportCommandMenuItem, d.copyExportCommandExternalMenuItem, d.proxySettingMenuItem] {
-            item?.isEnabled = enable
-        }
+        let menu = AppDelegate.shared.statusMenu
+        menu?.autoenablesItems = true
+        menu?.update()
     }
 }
 

@@ -16,9 +16,12 @@ enum WebCacheCleaner {
         DispatchQueue.global(qos: .utility).async {
             HTTPCookieStorage.shared.removeCookies(since: Date.distantPast)
             Logger.log("[WebCacheCleaner] All cookies deleted")
-            WKWebsiteDataStore.default().fetchDataRecords(ofTypes: WKWebsiteDataStore.allWebsiteDataTypes()) { records in
+        }
+        DispatchQueue.main.async {
+            let store = WKWebsiteDataStore.default()
+            store.fetchDataRecords(ofTypes: WKWebsiteDataStore.allWebsiteDataTypes()) { records in
                 for record in records {
-                    WKWebsiteDataStore.default().removeData(ofTypes: record.dataTypes, for: [record], completionHandler: {})
+                    store.removeData(ofTypes: record.dataTypes, for: [record], completionHandler: {})
                     Logger.log("[WebCacheCleaner] Record \(record) deleted")
                 }
             }
@@ -173,7 +176,7 @@ class ClashWebViewContoller: NSViewController {
     }
 
     func loadWebRecourses() {
-        WKWebsiteDataStore.default().removeData(ofTypes: WKWebsiteDataStore.allWebsiteDataTypes(), modifiedSince: Date(timeIntervalSince1970: 0), completionHandler: {})
+        WKWebsiteDataStore.default().removeData(ofTypes: [WKWebsiteDataTypeDiskCache, WKWebsiteDataTypeMemoryCache], modifiedSince: Date(timeIntervalSince1970: 0), completionHandler: {})
         // defaults write com.clashfx.app webviewUrl "your url"
         if let userDefineUrl = UserDefaults.standard.string(forKey: "webviewUrl"), let url = URL(string: userDefineUrl) {
             Logger.log("get user define url: \(url)")

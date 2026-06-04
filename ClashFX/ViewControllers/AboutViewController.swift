@@ -9,6 +9,7 @@
 import Cocoa
 
 class AboutViewController: NSViewController {
+    @IBOutlet var appIconImageView: NSImageView!
     @IBOutlet var versionLabel: NSTextField!
     @IBOutlet var buildTimeLabel: NSTextField!
     @IBOutlet var coreVersionLabel: NSTextField!
@@ -29,9 +30,14 @@ class AboutViewController: NSViewController {
         let build = AppVersionUtil.currentBuild
         let isBeta = AppVersionUtil.isBeta ? " Beta" : ""
 
+        appIconImageView.image = NSApp.applicationIconImage
         versionLabel.stringValue = "Version: \(version) (\(build))\(isBeta)"
         coreVersionLabel.stringValue = clashCoreVersion
-        buildTimeLabel.stringValue = "\(commit)-\(branch) \(buildTime)"
+        if commit == "unknown" && branch == "unknown" && buildTime == "unknown" {
+            buildTimeLabel.stringValue = NSLocalizedString("Local development build", comment: "")
+        } else {
+            buildTimeLabel.stringValue = "\(commit)-\(branch) \(buildTime)"
+        }
     }
 
     override func viewWillAppear() {

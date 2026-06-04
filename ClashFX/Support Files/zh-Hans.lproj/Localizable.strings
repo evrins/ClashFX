@@ -456,7 +456,7 @@
 "Drag and drop an image to customize the app icon.\nRecommended: 512x512 px (1024x1024 for @2x), PNG or ICNS format." = "拖拽图片到此处自定义应用图标。\n建议尺寸：512×512 像素（@2x 为 1024×1024），PNG 或 ICNS 格式。";
 
 /* Tray Menu Settings */
-"Tray Menu" = "托盘菜单";
+"Tray Menu" = "菜单栏菜单";
 
 /* No comment provided by engineer. */
 "Node Switch" = "节点切换";
@@ -522,7 +522,7 @@
 "Config Switcher" = "配置切换";
 
 /* Tray Menu Settings hint */
-"Show or hide items in the tray menu." = "选择托盘菜单中各项目的显示与隐藏";
+"Show or hide items in the tray menu." = "选择菜单栏菜单中各项目的显示与隐藏";
 
 /* App icon picker */
 "Built-in app icons" = "内置 APP 图标";
@@ -542,11 +542,12 @@
 
 /* Menu bar icon picker */
 "Built-in menu bar icons" = "内置菜单栏图标";
-"Lightning Cat" = "方案 1：闪电猫";
-"Network Nodes" = "方案 2：节点网络";
-"Linked Nodes" = "方案 2：节点连线";
-"Shield Cat" = "方案 3：盾牌猫";
-"Bolt Outline" = "方案 4：闪电线框";
+"Lightning Cat" = "闪电猫";
+"Network Nodes" = "节点网络";
+"Shield Cat" = "盾牌猫";
+"Bolt Outline" = "闪电线框";
+"Outline Face Cat" = "线框猫脸";
+"Filled Face Cat" = "实心猫脸";
 
 /* Advanced TUN Settings */
 "Advanced TUN Settings…" = "高级 TUN 设置…";
@@ -556,3 +557,42 @@
 "TUN MTU (%d–%d):" = "TUN MTU（%d–%d）：";
 "Interface (empty = auto-detect):" = "出口网卡（留空 = 自动探测）：";
 "Invalid MTU. Kept previous value." = "MTU 无效，已保留原值。";
+
+/* Lab channel */
+"Update channel name" = "更新通道";
+"Stable" = "正式版";
+"Lab (Experimental)" = "实验室版 (Lab)";
+"Lab" = "Lab";
+
+"Join the ClashFX Lab?" = "加入 ClashFX 实验室？";
+"Lab builds receive bug fixes and experimental features sooner, but update more often and are less stable than Stable. You can switch back any time. Please report any issues on GitHub." = "实验室版会更早收到 bug 修复和实验性功能，更新更频繁，稳定性低于正式版。你可以随时切换回来。遇到问题请在 GitHub 反馈。";
+"Join Lab" = "加入实验室";
+"Leave the ClashFX Lab?" = "退出 ClashFX 实验室？";
+"You will keep running your current Lab version until the next Stable release catches up. To downgrade immediately, use \"Roll back to Stable\" below." = "你将继续使用当前的 Lab 版本，直到下一个正式版本发布并自动覆盖。若要立即降级，请使用下方的「回退到正式版」。";
+"Leave Lab" = "退出实验室";
+
+"Send Feedback…" = "反馈问题…";
+"Copy Diagnostic Info…" = "复制诊断信息…";
+"Open Crash Log Folder" = "打开崩溃日志目录";
+"Roll Back to Stable…" = "回退到正式版…";
+
+"Diagnostic information ready" = "诊断信息已准备好";
+"The report below has been sanitized (IPs, domains, and credentials replaced with placeholders). Review it before sharing, then copy to clipboard." = "以下报告已脱敏(IP、域名、凭据已替换为占位符)。复制前请确认内容,再粘贴到剪贴板。";
+"Copy to Clipboard" = "复制到剪贴板";
+
+"Roll back to the latest Stable release" = "回退到最新正式版";
+"This opens the Stable download page in your browser. To complete the rollback:" = "将在浏览器中打开正式版下载页面。完成回退的步骤:";
+"Download ClashFX.dmg, then mount it." = "下载 ClashFX.dmg,然后双击挂载。";
+"Drag ClashFX into Applications and choose \"Replace\"." = "将 ClashFX 拖入「应用程序」,选择「替换」。";
+"Reopen ClashFX." = "重新打开 ClashFX。";
+"Your settings and configuration are preserved." = "你的所有设置和配置都将保留。";
+"Stable will not auto-upgrade back to Lab." = "正式版不会自动升级回 Lab。";
+"If Enhanced Mode is on, please disable it before downgrading." = "如果已开启增强模式,请先关闭再降级。";
+"Open Download Page" = "打开下载页";
+"Local development build" = "本地开发版";
+
+/* Bypass Common Chinese Apps */
+"Bypass Common Chinese Apps" = "绕过常用国内应用";
+
+/* Requires Enhanced Mode (uses PROCESS-NAME rules) */
+"Requires Enhanced Mode (uses PROCESS-NAME rules)" = "需要先开启增强模式（依赖 PROCESS-NAME 规则）";

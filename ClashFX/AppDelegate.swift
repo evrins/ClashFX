@@ -12,6 +12,7 @@ import CocoaLumberjack
 import LetsMove
 import RxCocoa
 import RxSwift
+import Yams
 
 let statusItemLengthWithSpeed: CGFloat = 72
 
@@ -68,7 +69,17 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     var configEditorMenuItem: NSMenuItem?
     private var subscriptionStatusMenuItem: NSMenuItem?
     private var subscriptionStatusSeparator: NSMenuItem?
+    private var localProxyProviderSubscriptionInfoCache: [String: SubscriptionInfo] = [:]
+    private var localProxyProviderSubscriptionInfoRequests = Set<String>()
+    private var localProxyProviderSubscriptionInfoAttemptTimes: [String: Date] = [:]
     private weak var advancedTunMenuItem: NSMenuItem?
+    private weak var bypassChineseAppsMenuItem: NSMenuItem?
+    var labHelpMenuItems: [NSMenuItem] = []
+    private weak var labFeedbackMenuItem: NSMenuItem?
+    private weak var labCopyDiagMenuItem: NSMenuItem?
+    private weak var labCrashLogsMenuItem: NSMenuItem?
+    private weak var labRollbackMenuItem: NSMenuItem?
+    private weak var labHelpSeparator: NSMenuItem?
 
     var disposeBag = DisposeBag()
     var statusItemView: StatusItemViewProtocol!
@@ -79,6 +90,10 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
     private var lastStreamResetTime: Date = .distantPast
     private var pendingStreamResetWork: DispatchWorkItem?
+
+    /// Short-circuits TerminalConfirmAction during self-relaunch so the old
+    /// status bar icon does not linger on "Quitting…" beside the new one (#84 #91).
+    private var isRestarting = false
 
     private static let tunDNSServer = "198.18.0.2"
 
@@ -111,8 +126,16 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         statusMenu.delegate = self
         statusItem.menu = statusMenu
         AppLogoTool.applyLogo()
+        NotificationCenter.default.addObserver(
+            forName: Settings.labChannelDidChangeNotification,
+            object: nil,
+            queue: .main
+        ) { _ in
+            AppLogoTool.applyLogo()
+        }
         setupStatusMenuItemData()
         installAdvancedTunMenuItem()
+        installBypassChineseAppsMenuItem()
         DispatchQueue.main.async {
             self.postFinishLaunching()
         }
@@ -138,6 +161,10 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         }
         setupLanguageMenu()
         setupConfigEditorMenuItem()
+        // 启用自动更新检查（使用fork项目的GitHub Pages）
+        AutoUpgradeManager.shared.setup()
+        AutoUpgradeManager.shared.setupCheckForUpdatesMenuItem(checkForUpdateMenuItem)
+        installLabHelpMenuItems()
         // install proxy helper
         _ = ClashResourceManager.check()
         PrivilegedHelperManager.shared.checkInstall()
@@ -207,6 +234,10 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     func applicationShouldTerminate(_ sender: NSApplication) -> NSApplication.TerminateReply {
+        if isRestarting {
+            Logger.log("ClashFX restart: skipping interactive terminate flow")
+            return .terminateNow
+        }
         return TerminalConfirmAction.run()
     }
 
@@ -224,6 +255,13 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             Logger.log("Need Reset Proxy Setting again", level: .error)
             SystemProxyManager.shared.disableProxy()
         }
+    }
+
+    func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows flag: Bool) -> Bool {
+        DispatchQueue.main.async { [weak self] in
+            self?.statusItem?.button?.performClick(nil)
+        }
+        return true
     }
 
     func checkMenuIconVisable() {
@@ -278,6 +316,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
         refreshStatusItemViewStatus()
         enhancedModeMenuItem.state = Settings.enhancedMode ? .on : .off
+        bypassChineseAppsMenuItem?.state = Settings.bypassChineseApps ? .on : .off
         installSubscriptionStatusMenuItemIfNeeded()
         refreshSubscriptionStatusMenuItem()
     }
@@ -310,12 +349,15 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
         let activeName = ConfigManager.selectConfigName
         let activeRemote = RemoteConfigManager.shared.configs.first { $0.name == activeName }
-        guard let info = activeRemote?.subscriptionInfo,
+        let info = activeRemote?.subscriptionInfo ?? localProxyProviderSubscriptionInfoCache[activeName]
+
+        guard let info,
               let summary = SubscriptionInfoFormatter.menuSubtitle(for: info) else {
             item.attributedTitle = NSAttributedString(string: "")
             item.title = ""
             item.isHidden = true
             separator.isHidden = true
+            refreshLocalProxyProviderSubscriptionStatus(configName: activeName)
             return
         }
 
@@ -325,6 +367,64 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         )
         item.isHidden = false
         separator.isHidden = false
+    }
+
+    private func refreshLocalProxyProviderSubscriptionStatus(configName: String) {
+        guard !RemoteConfigManager.shared.configs.contains(where: { $0.name == configName }) else { return }
+        guard !localProxyProviderSubscriptionInfoRequests.contains(configName) else { return }
+        if let lastAttempt = localProxyProviderSubscriptionInfoAttemptTimes[configName],
+           Date().timeIntervalSince(lastAttempt) < Settings.configAutoUpdateInterval {
+            return
+        }
+
+        localProxyProviderSubscriptionInfoRequests.insert(configName)
+        localProxyProviderSubscriptionInfoAttemptTimes[configName] = Date()
+
+        ConfigManager.getConfigPath(configName: configName) { [weak self] path in
+            DispatchQueue.global(qos: .utility).async {
+                guard let yaml = try? String(contentsOfFile: path, encoding: .utf8),
+                      let providerURL = Self.firstRemoteProxyProviderURL(in: yaml) else {
+                    DispatchQueue.main.async {
+                        self?.localProxyProviderSubscriptionInfoRequests.remove(configName)
+                    }
+                    return
+                }
+
+                let providerConfig = RemoteConfigModel(url: providerURL.absoluteString, name: configName)
+                RemoteConfigManager.getRemoteConfigData(config: providerConfig) { providerBody, _, providerHeaders in
+                    let headerInfo = RemoteConfigManager.parseSubscriptionUserinfoHeader(providerHeaders)
+                    let bodyInfo = providerBody.flatMap(RemoteConfigManager.parseSubscriptionInfoFromBody)
+                    let info = SubscriptionInfo.merging(primary: headerInfo, fallback: bodyInfo)
+
+                    DispatchQueue.main.async {
+                        guard let self = self else { return }
+                        self.localProxyProviderSubscriptionInfoRequests.remove(configName)
+                        if let info {
+                            self.localProxyProviderSubscriptionInfoCache[configName] = info
+                        }
+                        if ConfigManager.selectConfigName == configName {
+                            self.refreshSubscriptionStatusMenuItem()
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    private static func firstRemoteProxyProviderURL(in yaml: String) -> URL? {
+        guard let document = try? ConfigDocument.loadFromYAML(yaml) else { return nil }
+        for (_, provider) in document.proxyProviders {
+            guard let dict = provider as? [String: Any],
+                  let type = (dict["type"] as? String)?.lowercased(),
+                  ["http", "https"].contains(type),
+                  let rawURL = dict["url"] as? String,
+                  let url = URL(string: rawURL),
+                  ["http", "https"].contains(url.scheme?.lowercased() ?? "") else {
+                continue
+            }
+            return url
+        }
+        return nil
     }
 
     func setupData() {
@@ -489,7 +589,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             .notification(.systemNetworkStatusIPUpdate).map { _ in
                 NetworkChangeNotifier.getPrimaryIPAddress(allowIPV6: false)
             }.bind { [weak self] _ in
-                if RemoteControlManager.selectConfig != nil {
+                if !ApiRequest.useDirectApi() {
                     self?.resetStreamApi()
                 }
             }.disposed(by: disposeBag)
@@ -670,8 +770,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
         ClashProxy.cleanCache()
 
-        ApiRequest.requestConfigUpdate(configName: config) {
-            [weak self] err in
+        let reloadCallback: (ErrorString?) -> Void = { [weak self] err in
             guard let self = self else { return }
 
             clashResumeCallbacks()
@@ -703,9 +802,82 @@ class AppDelegate: NSObject, NSApplicationDelegate {
                 NotificationCenter.default.post(name: .reloadDashboard, object: nil)
             }
         }
+
+        requestConfigUpdateApplyingRulePatch(configName: config, callback: reloadCallback)
+    }
+
+    private static let rulePatchedConfigPath = kConfigFolderPath + ".rule_patched_config.runtime"
+
+    private func requestConfigUpdateApplyingRulePatch(configName: String, callback: @escaping ((ErrorString?) -> Void)) {
+        if let patchedPath = writeRulePatchedConfigIfNeeded(for: configName) {
+            ApiRequest.requestConfigUpdate(configPath: patchedPath, callback: callback)
+        } else {
+            ApiRequest.requestConfigUpdate(configName: configName, callback: callback)
+        }
+    }
+
+    private func writeRulePatchedConfigIfNeeded(for configName: String) -> String? {
+        let removePatched: () -> Void = {
+            try? FileManager.default.removeItem(atPath: Self.rulePatchedConfigPath)
+        }
+
+        guard !Settings.enhancedMode else {
+            removePatched()
+            return nil
+        }
+
+        guard !ICloudManager.shared.useiCloud.value else {
+            removePatched()
+            return nil
+        }
+
+        let injectedRules = Settings.proxyIgnoreListAsRules()
+        guard !injectedRules.isEmpty else {
+            removePatched()
+            return nil
+        }
+
+        let userPath = Paths.localConfigPath(for: configName)
+        guard FileManager.default.fileExists(atPath: userPath) else {
+            removePatched()
+            return nil
+        }
+
+        do {
+            let yaml = try String(contentsOfFile: userPath, encoding: .utf8)
+            guard var root = try Yams.load(yaml: yaml) as? [String: Any] else {
+                Logger.log("[Rule Patch] YAML root is not a dictionary, skipping", level: .warning)
+                removePatched()
+                return nil
+            }
+            let existingRules: [String]
+            if let rules = root["rules"] {
+                guard let parsedRules = rules as? [String] else {
+                    Logger.log("[Rule Patch] YAML rules is not a string array, skipping", level: .warning)
+                    removePatched()
+                    return nil
+                }
+                existingRules = parsedRules
+            } else {
+                existingRules = []
+            }
+            root["rules"] = injectedRules + existingRules
+            let patched = try Yams.dump(object: root)
+            try patched.write(toFile: Self.rulePatchedConfigPath, atomically: true, encoding: .utf8)
+            Logger.log("[Rule Patch] Injected \(injectedRules.count) ignore rules into \(Self.rulePatchedConfigPath)")
+            return Self.rulePatchedConfigPath
+        } catch {
+            Logger.log("[Rule Patch] Failed: \(error.localizedDescription)", level: .warning)
+            removePatched()
+            return nil
+        }
     }
 
     @objc func resetProxySettingOnWakeupFromSleep() {
+        if !ApiRequest.useDirectApi() {
+            resetStreamApi()
+        }
+
         guard !ConfigManager.shared.isProxySetByOtherVariable.value,
               ConfigManager.shared.proxyPortAutoSet else { return }
         guard NetworkChangeNotifier.getPrimaryInterface() != nil else { return }
@@ -714,10 +886,6 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             Logger.log("Resting proxy setting, current:\(rawProxy)", level: .warning)
             SystemProxyManager.shared.disableProxy()
             SystemProxyManager.shared.enableProxy()
-        }
-
-        if RemoteControlManager.selectConfig != nil {
-            resetStreamApi()
         }
     }
 
@@ -797,6 +965,72 @@ extension AppDelegate {
         }
     }
 
+    private func installLabHelpMenuItems() {
+        guard let parent = helpMenuItem.submenu ?? helpMenuItem.menu else { return }
+
+        let sep = NSMenuItem.separator()
+        parent.addItem(sep)
+        labHelpSeparator = sep
+
+        let feedback = NSMenuItem(
+            title: NSLocalizedString("Send Feedback…", comment: ""),
+            action: #selector(actionLabSendFeedback(_:)),
+            keyEquivalent: ""
+        )
+        feedback.target = self
+        parent.addItem(feedback)
+        labHelpMenuItems.append(feedback)
+        labFeedbackMenuItem = feedback
+
+        let copyDiag = NSMenuItem(
+            title: NSLocalizedString("Copy Diagnostic Info…", comment: ""),
+            action: #selector(actionLabCopyDiagnostic(_:)),
+            keyEquivalent: ""
+        )
+        copyDiag.target = self
+        parent.addItem(copyDiag)
+        labHelpMenuItems.append(copyDiag)
+        labCopyDiagMenuItem = copyDiag
+
+        let crashLogs = NSMenuItem(
+            title: NSLocalizedString("Open Crash Log Folder", comment: ""),
+            action: #selector(actionLabOpenCrashLogs(_:)),
+            keyEquivalent: ""
+        )
+        crashLogs.target = self
+        parent.addItem(crashLogs)
+        labHelpMenuItems.append(crashLogs)
+        labCrashLogsMenuItem = crashLogs
+
+        if AutoUpgradeManager.isLabBuild {
+            let rollback = NSMenuItem(
+                title: NSLocalizedString("Roll Back to Stable…", comment: ""),
+                action: #selector(actionLabRollback(_:)),
+                keyEquivalent: ""
+            )
+            rollback.target = self
+            parent.addItem(rollback)
+            labHelpMenuItems.append(rollback)
+            labRollbackMenuItem = rollback
+        }
+    }
+
+    @objc private func actionLabSendFeedback(_ sender: Any) {
+        LabSupport.openGitHubIssueWithTemplate()
+    }
+
+    @objc private func actionLabCopyDiagnostic(_ sender: Any) {
+        LabSupport.copyDiagnosticToPasteboardWithPreview()
+    }
+
+    @objc private func actionLabOpenCrashLogs(_ sender: Any) {
+        LabSupport.openCrashLogFolder()
+    }
+
+    @objc private func actionLabRollback(_ sender: Any) {
+        LabSupport.presentRollbackDialog()
+    }
+
     private func installAdvancedTunMenuItem() {
         let item = NSMenuItem(
             title: NSLocalizedString("Advanced TUN Settings…", comment: ""),
@@ -812,6 +1046,42 @@ extension AppDelegate {
             statusMenu.addItem(item)
         }
         advancedTunMenuItem = item
+    }
+
+    private func installBypassChineseAppsMenuItem() {
+        let item = NSMenuItem(
+            title: NSLocalizedString("Bypass Common Chinese Apps", comment: ""),
+            action: #selector(actionToggleBypassChineseApps(_:)),
+            keyEquivalent: ""
+        )
+        item.target = self
+        item.state = Settings.bypassChineseApps ? .on : .off
+        item.toolTip = NSLocalizedString(
+            "Requires Enhanced Mode (uses PROCESS-NAME rules)",
+            comment: ""
+        )
+        let parentMenu = enhancedModeMenuItem.menu ?? statusMenu
+        let anchor = advancedTunMenuItem ?? enhancedModeMenuItem
+        let insertIndex = (parentMenu?.index(of: anchor!) ?? -1) + 1
+        if let menu = parentMenu, insertIndex > 0 {
+            menu.insertItem(item, at: insertIndex)
+        } else {
+            statusMenu.addItem(item)
+        }
+        bypassChineseAppsMenuItem = item
+    }
+
+    @objc func actionToggleBypassChineseApps(_ sender: NSMenuItem) {
+        let newState = !Settings.bypassChineseApps
+        Settings.bypassChineseApps = newState
+        bypassChineseAppsMenuItem?.state = newState ? .on : .off
+        Logger.log("Bypass Common Chinese Apps \(newState ? "enabled" : "disabled")")
+
+        if Settings.enhancedMode {
+            disableEnhancedMode { [weak self] _ in
+                self?.enableEnhancedMode { _ in }
+            }
+        }
     }
 
     @objc func showAdvancedTunSettings(_ sender: Any?) {
@@ -866,6 +1136,14 @@ extension AppDelegate {
     }
 
     private func enableEnhancedMode(completion: @escaping (String?) -> Void) {
+        // Allow one retry: each attempt regenerates .enhanced_config.yaml, which
+        // re-picks the controller port (stable 19090, or a fresh free port if it
+        // is occupied by a stale core). This absorbs transient port races and
+        // leftover mihomo_core processes that would otherwise fail the launch.
+        attemptEnableEnhancedMode(attemptsLeft: 1, alreadySuspended: false, completion: completion)
+    }
+
+    private func attemptEnableEnhancedMode(attemptsLeft: Int, alreadySuspended: Bool, completion: @escaping (String?) -> Void) {
         let tempConfigPath = kConfigFolderPath + ".enhanced_config.yaml"
         let selectedConfigName = ConfigManager.selectConfigName
 
@@ -874,15 +1152,24 @@ extension AppDelegate {
                 let writeResult = clashWriteEnhancedConfig(
                     selectedConfigPath.goStringBuffer(),
                     tempConfigPath.goStringBuffer(),
-                    Settings.tunRouteExcludeList.joined(separator: ",").goStringBuffer(),
+                    Settings.normalizeAndPersistTunRouteExcludeList().joined(separator: ",").goStringBuffer(),
                     GoUint32(Settings.tunMTU),
-                    Settings.tunInterfaceName.goStringBuffer()
+                    Settings.tunInterfaceName.goStringBuffer(),
+                    Settings.bypassChineseApps ? 1 : 0
                 )?.toString() ?? ""
 
                 DispatchQueue.main.async {
                     guard let self = self else { return }
 
+                    let resumeIfNeeded = {
+                        if alreadySuspended {
+                            clashResumeCallbacks()
+                            _ = clashResumeCore()
+                        }
+                    }
+
                     guard !writeResult.hasPrefix("error:") else {
+                        resumeIfNeeded()
                         completion(writeResult)
                         return
                     }
@@ -891,24 +1178,30 @@ extension AppDelegate {
                           let portInfo = try? JSONSerialization.jsonObject(with: jsonData) as? [String: String],
                           let extController = portInfo["externalController"],
                           let port = extController.components(separatedBy: ":").last else {
+                        resumeIfNeeded()
                         completion(NSLocalizedString("Failed to parse enhanced config", comment: ""))
                         return
                     }
                     let secret = portInfo["secret"] ?? ""
 
                     guard let binaryPath = Bundle.main.path(forResource: "mihomo_core", ofType: nil) else {
+                        resumeIfNeeded()
                         completion(NSLocalizedString("mihomo_core not found", comment: ""))
                         return
                     }
 
                     guard let helper = PrivilegedHelperManager.shared.helper() else {
+                        resumeIfNeeded()
                         completion(NSLocalizedString("Helper not available", comment: ""))
                         return
                     }
 
-                    // Pause callbacks before suspending core to prevent error storms
-                    clashPauseCallbacks()
-                    clashSuspendCore()
+                    // Pause callbacks before suspending core to prevent error storms.
+                    // Only suspend once across the whole retry sequence.
+                    if !alreadySuspended {
+                        clashPauseCallbacks()
+                        clashSuspendCore()
+                    }
 
                     helper.startMihomoCore(
                         withBinaryPath: binaryPath,
@@ -917,9 +1210,18 @@ extension AppDelegate {
                     ) { [weak self] error in
                         DispatchQueue.main.async {
                             if let error = error {
-                                clashResumeCallbacks()
-                                _ = clashResumeCore()
-                                completion(error)
+                                if attemptsLeft > 0 {
+                                    Logger.log("External core launch failed (\(error)), retrying (\(attemptsLeft) left)", level: .warning)
+                                    helper.stopMihomoCore { _ in
+                                        DispatchQueue.main.async {
+                                            self?.attemptEnableEnhancedMode(attemptsLeft: attemptsLeft - 1, alreadySuspended: true, completion: completion)
+                                        }
+                                    }
+                                } else {
+                                    clashResumeCallbacks()
+                                    _ = clashResumeCore()
+                                    completion(error)
+                                }
                             } else {
                                 ConfigManager.shared.apiPort = port
                                 ConfigManager.shared.apiSecret = secret
@@ -931,6 +1233,15 @@ extension AppDelegate {
                                         self?.verifyTunStatus(port: port, secret: secret)
                                         self?.overrideDNSForTun()
                                         completion(nil)
+                                    } else if attemptsLeft > 0 {
+                                        Logger.log("External core not ready, regenerating config and retrying (\(attemptsLeft) left)", level: .warning)
+                                        ConfigManager.shared.isEnhancedModeActive = false
+                                        self?.refreshStatusItemViewStatus()
+                                        helper.stopMihomoCore { _ in
+                                            DispatchQueue.main.async {
+                                                self?.attemptEnableEnhancedMode(attemptsLeft: attemptsLeft - 1, alreadySuspended: true, completion: completion)
+                                            }
+                                        }
                                     } else {
                                         Logger.log("External core failed to start, rolling back", level: .error)
                                         helper.stopMihomoCore { _ in
@@ -1018,7 +1329,7 @@ extension AppDelegate {
                 return
             }
             let selectedConfig = ConfigManager.selectConfigName
-            ApiRequest.requestConfigUpdate(configName: selectedConfig) { _ in
+            self?.requestConfigUpdateApplyingRulePatch(configName: selectedConfig) { _ in
                 clashResumeCallbacks()
                 completion(nil)
             }
@@ -1441,20 +1752,46 @@ extension AppDelegate {
     }
 
     private func restartApp() {
+        guard !isRestarting else { return }
+        isRestarting = true
         let path = Bundle.main.bundlePath
-        if #available(macOS 10.15, *) {
-            let url = URL(fileURLWithPath: path)
-            let config = NSWorkspace.OpenConfiguration()
-            config.createsNewApplicationInstance = true
-            NSWorkspace.shared.openApplication(at: url, configuration: config) { _, _ in }
-        } else {
-            let task = Process()
-            task.launchPath = "/bin/sh"
-            task.arguments = ["-c", "sleep 0.5 && open \"\(path)\""]
-            task.launch()
+
+        if let item = statusItem {
+            NSStatusBar.system.removeStatusItem(item)
         }
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
-            NSApp.terminate(nil)
+
+        let launchAndExit: () -> Void = {
+            let terminate = {
+                DispatchQueue.main.async {
+                    NSApp.terminate(nil)
+                }
+            }
+            if #available(macOS 10.15, *) {
+                let url = URL(fileURLWithPath: path)
+                let config = NSWorkspace.OpenConfiguration()
+                config.createsNewApplicationInstance = true
+                NSWorkspace.shared.openApplication(at: url, configuration: config) { _, error in
+                    if let error = error {
+                        Logger.log("ClashFX restart: openApplication failed: \(error.localizedDescription)", level: .error)
+                    }
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.5, execute: terminate)
+                }
+            } else {
+                let task = Process()
+                task.launchPath = "/bin/sh"
+                task.arguments = ["-c", "sleep 0.5 && open \"\(path)\""]
+                task.launch()
+                DispatchQueue.main.asyncAfter(deadline: .now() + 1.0, execute: terminate)
+            }
+        }
+
+        if ConfigManager.shared.isEnhancedModeActive {
+            Logger.log("ClashFX restart: cleaning Enhanced Mode before relaunch")
+            cleanupEnhancedModeForTermination {
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.3, execute: launchAndExit)
+            }
+        } else {
+            launchAndExit()
         }
     }
 }
@@ -1647,6 +1984,7 @@ extension AppDelegate {
 
 extension AppDelegate: NSMenuDelegate {
     func menuNeedsUpdate(_ menu: NSMenu) {
+        ensureMenuTargets(in: menu)
         MenuItemFactory.refreshExistingMenuItems()
         updateConfigFiles()
         refreshSubscriptionStatusMenuItem()
@@ -1654,6 +1992,17 @@ extension AppDelegate: NSMenuDelegate {
         NotificationCenter.default.post(name: .proxyMeneViewShowLeftPadding,
                                         object: nil,
                                         userInfo: ["show": hasMenuSelected()])
+    }
+
+    private func ensureMenuTargets(in menu: NSMenu) {
+        for item in menu.items {
+            if item.action != nil, item.target == nil {
+                item.target = self
+            }
+            if let submenu = item.submenu {
+                ensureMenuTargets(in: submenu)
+            }
+        }
     }
 
     func menu(_ menu: NSMenu, willHighlight item: NSMenuItem?) {
@@ -1666,6 +2015,36 @@ extension AppDelegate: NSMenuDelegate {
         for element in menu.items {
             (element.view as? ProxyGroupMenuHighlightDelegate)?.highlight(item: nil)
         }
+    }
+}
+
+// MARK: NSMenuItemValidation
+
+extension AppDelegate: NSMenuItemValidation {
+    func validateMenuItem(_ menuItem: NSMenuItem) -> Bool {
+        guard let action = menuItem.action else { return true }
+
+        // Bypass Common Chinese Apps relies on PROCESS-NAME rules,
+        // which only resolve under Enhanced Mode (TUN). In Rule mode
+        // mihomo cannot see the originating process, so the toggle is
+        // a no-op there. Disable it and surface the reason via tooltip.
+        if action == #selector(actionToggleBypassChineseApps(_:)) {
+            return Settings.enhancedMode
+        }
+
+        // When an External Control instance is selected, local-only
+        // actions don't apply to the remote core.
+        if RemoteControlManager.selectConfig != nil {
+            let disabledInRemoteMode: Set<Selector> = [
+                #selector(actionSetSystemProxy(_:)),
+                #selector(actionCopyExportCommand(_:))
+            ]
+            if disabledInRemoteMode.contains(action) {
+                return false
+            }
+        }
+
+        return true
     }
 }
 
@@ -1742,11 +2121,12 @@ extension AppDelegate {
         let showProxyActions = Settings.trayMenuShowProxyActions
         proxySettingMenuItem.isHidden = !(showProxyActions && Settings.trayMenuShowSystemProxy)
         enhancedModeMenuItem.isHidden = !(showProxyActions && Settings.trayMenuShowEnhancedMode)
-        advancedTunMenuItem?.isHidden = enhancedModeMenuItem.isHidden
+        advancedTunMenuItem?.isHidden = !(showProxyActions && Settings.trayMenuShowAdvancedTun)
+        bypassChineseAppsMenuItem?.isHidden = !(showProxyActions && Settings.trayMenuShowBypassChineseApps)
         let showCopy = showProxyActions && Settings.trayMenuShowCopyShellCmd
         copyExportCommandMenuItem.isHidden = !showCopy
         copyExportCommandExternalMenuItem.isHidden = !showCopy
-        let anyProxyAction = showProxyActions && (Settings.trayMenuShowSystemProxy || Settings.trayMenuShowEnhancedMode || Settings.trayMenuShowCopyShellCmd)
+        let anyProxyAction = showProxyActions && (Settings.trayMenuShowSystemProxy || Settings.trayMenuShowEnhancedMode || Settings.trayMenuShowAdvancedTun || Settings.trayMenuShowBypassChineseApps || Settings.trayMenuShowCopyShellCmd)
         proxyActionsSeparator.isHidden = !anyProxyAction
 
         // General Settings group
@@ -1788,11 +2168,21 @@ extension AppDelegate {
 
         // Help group
         let showHelp = Settings.trayMenuShowHelp
-        let anyHelpChild = Settings.trayMenuShowAbout || Settings.trayMenuShowLogLevel || Settings.trayMenuShowShowLog || Settings.trayMenuShowPorts
+        let feedbackVisible = showHelp && Settings.trayMenuShowFeedback && labFeedbackMenuItem != nil
+        let copyDiagVisible = showHelp && Settings.trayMenuShowCopyDiagnostic && labCopyDiagMenuItem != nil
+        let crashLogsVisible = showHelp && Settings.trayMenuShowCrashLogs && labCrashLogsMenuItem != nil
+        let rollbackVisible = showHelp && Settings.trayMenuShowRollback && labRollbackMenuItem != nil
+        let anyLabHelpChild = feedbackVisible || copyDiagVisible || crashLogsVisible || rollbackVisible
+        let anyHelpChild = Settings.trayMenuShowAbout || Settings.trayMenuShowCheckUpdate || Settings.trayMenuShowLogLevel || Settings.trayMenuShowShowLog || Settings.trayMenuShowPorts || anyLabHelpChild
         helpMenuItem.isHidden = !(showHelp && anyHelpChild)
         aboutMenuItem.isHidden = !(showHelp && Settings.trayMenuShowAbout)
         logLevelMenuItem.isHidden = !(showHelp && Settings.trayMenuShowLogLevel)
         showLogMenuItem.isHidden = !(showHelp && Settings.trayMenuShowShowLog)
         portsMenuItem.isHidden = !(showHelp && Settings.trayMenuShowPorts)
+        labFeedbackMenuItem?.isHidden = !feedbackVisible
+        labCopyDiagMenuItem?.isHidden = !copyDiagVisible
+        labCrashLogsMenuItem?.isHidden = !crashLogsVisible
+        labRollbackMenuItem?.isHidden = !rollbackVisible
+        labHelpSeparator?.isHidden = !anyLabHelpChild
     }
 }
