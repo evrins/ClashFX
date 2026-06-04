@@ -17,7 +17,6 @@ enum LabSupport {
         lines.append("## ClashFX Diagnostic Report")
         lines.append("")
         lines.append("- App Version: \(AppVersionUtil.currentVersion) (build \(AppVersionUtil.currentBuild))")
-//        lines.append("- Channel: \(AutoUpgradeManager.currentChannelDisplayName)\(Settings.isLabChannel ? " (subscribed)" : "")")
         lines.append("- macOS: \(ProcessInfo.processInfo.operatingSystemVersionString)")
         lines.append("- Architecture: \(hardwareArchitecture())")
         lines.append("- Locale: \(Locale.current.identifier)")

@@ -792,7 +792,6 @@
 				663E4677213FCDC4006F11BB /* Copy Files */,
 				318032FABBC2E552CB58B254 /* [CP] Copy Pods Resources */,
 				49B93AD42A3965B40080967C /* Swift Lint */,
-				9513A0EA4A066FA8473445EC /* [CP] Embed Pods Frameworks */,
 			);
 			buildRules = (
 			);
@@ -976,23 +975,6 @@
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
 			shellScript = "\"${PODS_ROOT}/SwiftLint/swiftlint\"\n";
-		};
-		9513A0EA4A066FA8473445EC /* [CP] Embed Pods Frameworks */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputFileListPaths = (
-				"${PODS_ROOT}/Target Support Files/Pods-ClashFX/Pods-ClashFX-frameworks-${CONFIGURATION}-input-files.xcfilelist",
-			);
-			name = "[CP] Embed Pods Frameworks";
-			outputFileListPaths = (
-				"${PODS_ROOT}/Target Support Files/Pods-ClashFX/Pods-ClashFX-frameworks-${CONFIGURATION}-output-files.xcfilelist",
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-ClashFX/Pods-ClashFX-frameworks.sh\"\n";
-			showEnvVarsInLog = 0;
 		};
 /* End PBXShellScriptBuildPhase section */
 

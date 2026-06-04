@@ -126,13 +126,6 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         statusMenu.delegate = self
         statusItem.menu = statusMenu
         AppLogoTool.applyLogo()
-        NotificationCenter.default.addObserver(
-            forName: Settings.labChannelDidChangeNotification,
-            object: nil,
-            queue: .main
-        ) { _ in
-            AppLogoTool.applyLogo()
-        }
         setupStatusMenuItemData()
         installAdvancedTunMenuItem()
         installBypassChineseAppsMenuItem()

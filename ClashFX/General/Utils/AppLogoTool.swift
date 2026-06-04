@@ -101,7 +101,6 @@ enum AppLogoTool {
     static func applyLogo() -> Bool {
         let bundlePath = Bundle.main.bundlePath
         let didSetIcon: Bool
-        let baseIcon = loadSelectedLogo() ?? originalDefaultIcon
         let finalIcon = loadSelectedLogo()
 
         if let finalIcon {
@@ -118,32 +117,6 @@ enum AppLogoTool {
         NSWorkspace.shared.noteFileSystemChanged(bundlePath)
         refreshIconAppearanceCache()
         return didSetIcon
-    }
-
-    private static func addLabBadge(to icon: NSImage) -> NSImage {
-        let canvas = NSSize(width: 1024, height: 1024)
-        let result = NSImage(size: canvas)
-        result.lockFocus()
-        defer { result.unlockFocus() }
-
-        icon.draw(in: NSRect(origin: .zero, size: canvas))
-
-        let dotDiameter: CGFloat = 112
-        let inset: CGFloat = 142
-        let dotRect = NSRect(
-            x: canvas.width - inset - dotDiameter,
-            y: canvas.height - inset - dotDiameter,
-            width: dotDiameter,
-            height: dotDiameter
-        )
-        let dot = NSBezierPath(ovalIn: dotRect)
-        NSColor.systemOrange.setFill()
-        dot.fill()
-        NSColor.white.setStroke()
-        dot.lineWidth = 24
-        dot.stroke()
-
-        return result
     }
 
     private static func refreshIconAppearanceCache() {
