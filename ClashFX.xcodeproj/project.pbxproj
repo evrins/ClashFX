@@ -7,10 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-<<<<<<< HEAD
-=======
 		03B729DE29C62F46117B82A2 /* LabSupport.swift in Sources */ = {isa = PBXBuildFile; fileRef = E6174820C53D16D319C2DB8E /* LabSupport.swift */; };
->>>>>>> main
 		079C0498F443DE06CFD1A2E0 /* FormHelpers.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1541315BE9AC1A5200C8FDA /* FormHelpers.swift */; };
 		0AD7506B2A5B9A04001FFBBD /* ConnectionLeftPannelViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0AD7506A2A5B9A04001FFBBD /* ConnectionLeftPannelViewModel.swift */; };
 		0AD7506D2A5B9B26001FFBBD /* ConnectionLeftTextCellView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0AD7506C2A5B9B26001FFBBD /* ConnectionLeftTextCellView.swift */; };
@@ -795,6 +792,7 @@
 				663E4677213FCDC4006F11BB /* Copy Files */,
 				318032FABBC2E552CB58B254 /* [CP] Copy Pods Resources */,
 				49B93AD42A3965B40080967C /* Swift Lint */,
+				9513A0EA4A066FA8473445EC /* [CP] Embed Pods Frameworks */,
 			);
 			buildRules = (
 			);
@@ -979,9 +977,7 @@
 			shellPath = /bin/sh;
 			shellScript = "\"${PODS_ROOT}/SwiftLint/swiftlint\"\n";
 		};
-<<<<<<< HEAD
-=======
-		A741C26F5755233F0D7CEC6F /* [CP] Embed Pods Frameworks */ = {
+		9513A0EA4A066FA8473445EC /* [CP] Embed Pods Frameworks */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -998,7 +994,6 @@
 			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-ClashFX/Pods-ClashFX-frameworks.sh\"\n";
 			showEnvVarsInLog = 0;
 		};
->>>>>>> main
 /* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
