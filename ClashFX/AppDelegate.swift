@@ -14,7 +14,7 @@ import RxCocoa
 import RxSwift
 import Yams
 
-let statusItemLengthWithSpeed: CGFloat = 72
+let statusItemLengthWithSpeed: CGFloat = 65
 
 @main
 class AppDelegate: NSObject, NSApplicationDelegate {
@@ -90,6 +90,9 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
     private var lastStreamResetTime: Date = .distantPast
     private var pendingStreamResetWork: DispatchWorkItem?
+    private var pendingEnhancedModeRefreshWork: DispatchWorkItem?
+    private static let enhancedModeRestoreMaxAttempts = 12
+    private static let enhancedModeRestoreRetryDelay: TimeInterval = 5
 
     /// Short-circuits TerminalConfirmAction during self-relaunch so the old
     /// status bar icon does not linger on "Quitting…" beside the new one (#84 #91).
@@ -299,10 +302,10 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             .bind { [weak self] show in
                 guard let self = self else { return }
                 self.showNetSpeedIndicatorMenuItem.state = (show ?? true) ? .on : .off
-                let statusItemLength: CGFloat = (show ?? true) ? statusItemLengthWithSpeed : 25
+                self.statusItemView.showSpeedContainer(show: show ?? true)
+                let statusItemLength = self.statusItemView.preferredWidth
                 self.statusItem.length = statusItemLength
                 self.statusItemView.updateSize(width: statusItemLength)
-                self.statusItemView.showSpeedContainer(show: show ?? true)
             }.disposed(by: disposeBag)
 
         refreshStatusItemViewStatus()
@@ -947,9 +950,7 @@ extension AppDelegate {
                     .post(title: NSLocalizedString("Enhanced Mode", comment: ""),
                           info: NSLocalizedString(info, comment: ""))
             }
-            self.syncConfig()
-            self.resetStreamApi()
-            MenuItemFactory.refreshExistingMenuItems()
+            self.scheduleEnhancedModePostToggleRefresh()
         }
 
         if newState {
@@ -1123,6 +1124,18 @@ extension AppDelegate {
         // is occupied by a stale core). This absorbs transient port races and
         // leftover mihomo_core processes that would otherwise fail the launch.
         attemptEnableEnhancedMode(attemptsLeft: 1, alreadySuspended: false, completion: completion)
+    }
+
+    private func scheduleEnhancedModePostToggleRefresh() {
+        pendingEnhancedModeRefreshWork?.cancel()
+        let work = DispatchWorkItem { [weak self] in
+            guard let self = self else { return }
+            self.syncConfig()
+            self.resetStreamApi()
+            MenuItemFactory.refreshExistingMenuItems()
+        }
+        pendingEnhancedModeRefreshWork = work
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.8, execute: work)
     }
 
     private func attemptEnableEnhancedMode(attemptsLeft: Int, alreadySuspended: Bool, completion: @escaping (String?) -> Void) {
@@ -1511,39 +1524,56 @@ extension AppDelegate {
     }
 
     private func restoreEnhancedModeIfNeeded() {
-        guard Settings.enhancedMode, ConfigManager.shared.isRunning else { return }
+        guard Settings.enhancedMode else { return }
+        restoreEnhancedMode(attemptsLeft: Self.enhancedModeRestoreMaxAttempts)
+    }
 
-        let restore: () -> Void = { [weak self] in
-            self?.enhancedModeMenuItem.isEnabled = false
-            self?.enableEnhancedMode { [weak self] error in
-                self?.enhancedModeMenuItem.isEnabled = true
-                if let error = error {
-                    Settings.enhancedMode = false
-                    self?.enhancedModeMenuItem.state = .off
-                    Logger.log("Failed to restore Enhanced Mode: \(error)", level: .error)
-                    self?.syncConfig()
-                    self?.resetStreamApi()
-                    MenuItemFactory.refreshExistingMenuItems()
-                } else {
-                    self?.enhancedModeMenuItem.state = .on
-                    Logger.log("Enhanced Mode restored successfully")
-                    self?.syncConfig()
-                    self?.resetStreamApi()
-                    MenuItemFactory.refreshExistingMenuItems()
+    private func restoreEnhancedMode(attemptsLeft: Int) {
+        guard Settings.enhancedMode else { return }
+
+        let retryOrFail: (String) -> Void = { [weak self] error in
+            guard let self = self else { return }
+
+            if attemptsLeft > 1, Settings.enhancedMode {
+                Logger.log("Failed to restore Enhanced Mode: \(error). Retrying in \(Self.enhancedModeRestoreRetryDelay)s (\(attemptsLeft - 1) left)", level: .warning)
+                DispatchQueue.main.asyncAfter(deadline: .now() + Self.enhancedModeRestoreRetryDelay) { [weak self] in
+                    self?.restoreEnhancedMode(attemptsLeft: attemptsLeft - 1)
                 }
+                return
+            }
+
+            self.finishFailedEnhancedModeRestore(error: error)
+        }
+
+        guard ConfigManager.shared.isRunning else {
+            retryOrFail(NSLocalizedString("Failed to restart built-in core", comment: ""))
+            return
+        }
+
+        guard PrivilegedHelperManager.shared.isHelperCheckFinished.value else {
+            retryOrFail(NSLocalizedString("Helper not available", comment: ""))
+            return
+        }
+
+        enhancedModeMenuItem.isEnabled = false
+        enableEnhancedMode { [weak self] error in
+            guard let self = self else { return }
+            self.enhancedModeMenuItem.isEnabled = true
+            if let error = error {
+                retryOrFail(error)
+            } else {
+                self.enhancedModeMenuItem.state = .on
+                Logger.log("Enhanced Mode restored successfully")
+                self.scheduleEnhancedModePostToggleRefresh()
             }
         }
+    }
 
-        if PrivilegedHelperManager.shared.isHelperCheckFinished.value {
-            restore()
-        } else {
-            PrivilegedHelperManager.shared.isHelperCheckFinished
-                .filter { $0 }
-                .take(1)
-                .observe(on: MainScheduler.instance)
-                .subscribe(onNext: { _ in restore() })
-                .disposed(by: disposeBag)
-        }
+    private func finishFailedEnhancedModeRestore(error: String) {
+        Settings.enhancedMode = false
+        enhancedModeMenuItem.state = .off
+        Logger.log("Failed to restore Enhanced Mode: \(error)", level: .error)
+        scheduleEnhancedModePostToggleRefresh()
     }
 
     @IBAction func actionAllowFromLan(_ sender: NSMenuItem) {

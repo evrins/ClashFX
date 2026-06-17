@@ -14,6 +14,8 @@ class StatusItemView: NSView, StatusItemViewProtocol {
     @IBOutlet var speedContainerView: NSView!
 
     private var speedTextView: SpeedTextView!
+    private let iconOnlyWidth: CGFloat = 25
+    private let speedTextPadding: CGFloat = 11
 
     // Use -1 so the first updateSpeedLabel(0, 0) call always triggers a redraw.
     var up: Int = -1
@@ -73,6 +75,11 @@ class StatusItemView: NSView, StatusItemViewProtocol {
         frame = CGRect(x: 0, y: 0, width: width, height: 22)
     }
 
+    var preferredWidth: CGFloat {
+        guard !speedContainerView.isHidden else { return iconOnlyWidth }
+        return iconOnlyWidth + speedTextView.textWidth + speedTextPadding
+    }
+
     func updateViewStatus(enableProxy: Bool) {
         if enableProxy {
             imageView.contentTintColor = NSColor.labelColor
@@ -83,21 +90,21 @@ class StatusItemView: NSView, StatusItemViewProtocol {
 
     func updateSpeedLabel(up: Int, down: Int) {
         guard !speedContainerView.isHidden else { return }
-        var needsResize = false
+        var needsRedraw = false
         if up != self.up {
             self.up = up
-            needsResize = true
+            needsRedraw = true
         }
         if down != self.down {
             self.down = down
-            needsResize = true
+            needsRedraw = true
         }
-        if needsResize {
+        if needsRedraw {
             speedTextView.update(
                 up: SpeedUtils.getSpeedString(for: up),
                 down: SpeedUtils.getSpeedString(for: down)
             )
-            updateDynamicWidth()
+            updateStatusItemWidthIfNeeded()
         }
     }
 
@@ -105,19 +112,13 @@ class StatusItemView: NSView, StatusItemViewProtocol {
         speedContainerView.isHidden = !show
         speedLeadingConstraint?.isActive = show
         collapsedSpeedWidthConstraint?.isActive = !show
+        updateStatusItemWidthIfNeeded()
     }
 
-    private func updateDynamicWidth() {
-        guard !speedContainerView.isHidden else { return }
-        let maxTextWidth = speedTextView.textWidth
-
-        // leading(3) + icon(18) + gap(8) + text + trailing(3)
-        let neededWidth = 32.0 + maxTextWidth
-        let width = max(statusItemLengthWithSpeed, neededWidth)
-
-        if abs(frame.width - width) > 0.5 {
-            updateSize(width: width)
-            statusItem?.length = width
-        }
+    private func updateStatusItemWidthIfNeeded() {
+        let width = preferredWidth
+        guard statusItem?.length != width else { return }
+        statusItem?.length = width
+        updateSize(width: width)
     }
 }

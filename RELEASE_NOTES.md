@@ -1,20 +1,24 @@
 ### Bug Fixes
 
-- **Subscription Summary No Longer Widens the Menu** — Long remote subscription usage/expiry text in the menu bar now gets shortened in the visible menu item, preventing the whole ClashFX menu from stretching wider than the screen. The full summary is still available via the item tooltip. (#120)
+- **Menu Bar Status Item Uses Less Space** — The upload/download speed indicator now sizes the macOS menu bar item from the actual rendered speed text instead of reserving a wide fixed block, keeping ClashFX compact in crowded menu bars while still expanding when longer speeds need room. (#127)
+- **Enhanced Mode Toggle No Longer Rebuilds the Menu Immediately** — After enabling or disabling Enhanced Mode, ClashFX now coalesces and slightly delays the config/stream/proxy-menu refresh work so quickly reopening the menu does not visibly freeze or flash during the toggle completion. (#125)
 
 ### Contributors
 
-- @xinggaoya — Reported the oversized subscription summary in the menu bar (#120)
+- @qzxwj — Reported the menu bar status item occupying too much width (#127)
+- @ljssafe — Reported the post-toggle Enhanced Mode menu freeze/flash (#125)
 
 ---
 
 ### 修复
 
-- **订阅摘要不再撑宽菜单** — 菜单栏里的远程订阅用量 / 到期时间过长时，现在会在可见菜单项中自动截断，避免整个 ClashFX 菜单被撑到超过屏幕宽度。完整摘要仍会保留在该菜单项的 tooltip 里。(#120)
+- **菜单栏状态项更省空间** — 上传 / 下载速度显示现在会根据实际渲染出来的文字宽度调整菜单栏项，不再预留过宽的固定区域；菜单栏拥挤时更紧凑，速度文字变长时也仍会自动扩展。(#127)
+- **增强模式切换后不再立刻重建菜单** — 开启或关闭增强模式后，ClashFX 现在会合并并稍微延迟配置同步、stream 重置和代理菜单刷新，避免用户马上重新打开菜单时出现明显卡顿或闪一下。(#125)
 
 ### 贡献者
 
-- @xinggaoya — 反馈订阅摘要导致菜单栏弹层过宽的问题 (#120)
+- @qzxwj — 反馈菜单栏状态项占用宽度偏大的问题 (#127)
+- @ljssafe — 反馈增强模式切换后菜单快速打开会卡顿 / 闪一下的问题 (#125)
 
 <!-- Previous release notes -->
 
