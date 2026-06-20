@@ -18,6 +18,11 @@ let statusItemLengthWithSpeed: CGFloat = 65
 
 @main
 class AppDelegate: NSObject, NSApplicationDelegate {
+    private enum EnhancedModeLaunchPreparation {
+        case success(port: String, secret: String)
+        case failure(String)
+    }
+
     private(set) var statusItem: NSStatusItem!
     @IBOutlet var statusMenu: NSMenu!
     @IBOutlet var proxySettingMenuItem: NSMenuItem!
@@ -67,6 +72,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     // Programmatically-added items stored for visibility management
     var langMenuItem: NSMenuItem?
     var configEditorMenuItem: NSMenuItem?
+    var profileMixinMenuItem: NSMenuItem?
     private var subscriptionStatusMenuItem: NSMenuItem?
     private var subscriptionStatusSeparator: NSMenuItem?
     private var localProxyProviderSubscriptionInfoCache: [String: SubscriptionInfo] = [:]
@@ -74,6 +80,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     private var localProxyProviderSubscriptionInfoAttemptTimes: [String: Date] = [:]
     private weak var advancedTunMenuItem: NSMenuItem?
     private weak var bypassChineseAppsMenuItem: NSMenuItem?
+    private weak var turnOffProxyMenuItem: NSMenuItem?
     var labHelpMenuItems: [NSMenuItem] = []
     private weak var labFeedbackMenuItem: NSMenuItem?
     private weak var labCopyDiagMenuItem: NSMenuItem?
@@ -93,6 +100,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     private var pendingEnhancedModeRefreshWork: DispatchWorkItem?
     private static let enhancedModeRestoreMaxAttempts = 12
     private static let enhancedModeRestoreRetryDelay: TimeInterval = 5
+    private static let runtimePatchedConfigPath = kConfigFolderPath + ".runtime_config.yaml"
 
     /// Short-circuits TerminalConfirmAction during self-relaunch so the old
     /// status bar icon does not linger on "Quitting…" beside the new one (#84 #91).
@@ -130,6 +138,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         statusItem.menu = statusMenu
         AppLogoTool.applyLogo()
         setupStatusMenuItemData()
+        installTurnOffProxyMenuItem()
         installAdvancedTunMenuItem()
         installBypassChineseAppsMenuItem()
         DispatchQueue.main.async {
@@ -157,6 +166,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         }
         setupLanguageMenu()
         setupConfigEditorMenuItem()
+        setupProfileMixinMenuItem()
         // 启用自动更新检查（使用fork项目的GitHub Pages）
         installLabHelpMenuItems()
         // install proxy helper
@@ -800,74 +810,129 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             }
         }
 
-        requestConfigUpdateApplyingRulePatch(configName: config, callback: reloadCallback)
+        requestConfigUpdateApplyingRuntimePatch(configName: config, callback: reloadCallback)
     }
 
-    private static let rulePatchedConfigPath = kConfigFolderPath + ".rule_patched_config.runtime"
-
-    private func requestConfigUpdateApplyingRulePatch(configName: String, callback: @escaping ((ErrorString?) -> Void)) {
-        if let patchedPath = writeRulePatchedConfigIfNeeded(for: configName) {
-            ApiRequest.requestConfigUpdate(configPath: patchedPath, callback: callback)
-        } else {
-            ApiRequest.requestConfigUpdate(configName: configName, callback: callback)
+    private func requestConfigUpdateApplyingRuntimePatch(configName: String, callback: @escaping ((ErrorString?) -> Void)) {
+        ConfigManager.getConfigPath(configName: configName) { [weak self] sourcePath in
+            guard let self = self else { return }
+            if let patchedPath = self.writeRuntimePatchedConfigIfNeeded(
+                for: configName,
+                sourcePath: sourcePath,
+                includeRulePatch: true
+            ) {
+                ApiRequest.requestConfigUpdate(configPath: patchedPath, callback: callback)
+            } else {
+                ApiRequest.requestConfigUpdate(configPath: sourcePath, callback: callback)
+            }
         }
     }
 
-    private func writeRulePatchedConfigIfNeeded(for configName: String) -> String? {
+    private func writeRuntimePatchedConfigIfNeeded(
+        for configName: String,
+        sourcePath: String,
+        includeRulePatch: Bool
+    ) -> String? {
         let removePatched: () -> Void = {
-            try? FileManager.default.removeItem(atPath: Self.rulePatchedConfigPath)
+            try? FileManager.default.removeItem(atPath: Self.runtimePatchedConfigPath)
         }
 
-        guard !Settings.enhancedMode else {
-            removePatched()
-            return nil
-        }
-
-        guard !ICloudManager.shared.useiCloud.value else {
-            removePatched()
-            return nil
-        }
-
-        let injectedRules = Settings.proxyIgnoreListAsRules()
-        guard !injectedRules.isEmpty else {
-            removePatched()
-            return nil
-        }
-
-        let userPath = Paths.localConfigPath(for: configName)
-        guard FileManager.default.fileExists(atPath: userPath) else {
+        guard FileManager.default.fileExists(atPath: sourcePath) else {
             removePatched()
             return nil
         }
 
         do {
-            let yaml = try String(contentsOfFile: userPath, encoding: .utf8)
+            let yaml = try String(contentsOfFile: sourcePath, encoding: .utf8)
             guard var root = try Yams.load(yaml: yaml) as? [String: Any] else {
-                Logger.log("[Rule Patch] YAML root is not a dictionary, skipping", level: .warning)
+                Logger.log("[Runtime Patch] YAML root is not a dictionary, skipping", level: .warning)
                 removePatched()
                 return nil
             }
-            let existingRules: [String]
-            if let rules = root["rules"] {
-                guard let parsedRules = rules as? [String] else {
-                    Logger.log("[Rule Patch] YAML rules is not a string array, skipping", level: .warning)
-                    removePatched()
-                    return nil
+
+            var changed = applyProfileMixin(to: &root)
+
+            if includeRulePatch && !Settings.enhancedMode {
+                let injectedRules = Settings.proxyIgnoreListAsRules()
+                if !injectedRules.isEmpty {
+                    let existingRules: [String]
+                    if let rules = root["rules"] {
+                        guard let parsedRules = rules as? [String] else {
+                            Logger.log("[Runtime Patch] YAML rules is not a string array, skipping", level: .warning)
+                            removePatched()
+                            return nil
+                        }
+                        existingRules = parsedRules
+                    } else {
+                        existingRules = []
+                    }
+                    root["rules"] = injectedRules + existingRules
+                    changed = true
                 }
-                existingRules = parsedRules
-            } else {
-                existingRules = []
             }
-            root["rules"] = injectedRules + existingRules
+
+            guard changed else {
+                removePatched()
+                return nil
+            }
+
             let patched = try Yams.dump(object: root)
-            try patched.write(toFile: Self.rulePatchedConfigPath, atomically: true, encoding: .utf8)
-            Logger.log("[Rule Patch] Injected \(injectedRules.count) ignore rules into \(Self.rulePatchedConfigPath)")
-            return Self.rulePatchedConfigPath
+            try patched.write(toFile: Self.runtimePatchedConfigPath, atomically: true, encoding: .utf8)
+            Logger.log("[Runtime Patch] Wrote runtime config for \(configName) to \(Self.runtimePatchedConfigPath)")
+            return Self.runtimePatchedConfigPath
         } catch {
-            Logger.log("[Rule Patch] Failed: \(error.localizedDescription)", level: .warning)
+            Logger.log("[Runtime Patch] Failed: \(error.localizedDescription)", level: .warning)
             removePatched()
             return nil
         }
+    }
+
+    private func applyProfileMixin(to root: inout [String: Any]) -> Bool {
+        guard FileManager.default.fileExists(atPath: Paths.profileMixinPath) else { return false }
+
+        do {
+            let yaml = try String(contentsOfFile: Paths.profileMixinPath, encoding: .utf8)
+            guard !yaml.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { return false }
+            guard let mixin = try Yams.load(yaml: yaml) as? [String: Any] else {
+                Logger.log("[Profile Mixin] YAML root is not a dictionary, skipping", level: .warning)
+                return false
+            }
+            root = mergeProfileMixin(mixin, into: root)
+            Logger.log("[Profile Mixin] Applied \(Paths.profileMixinPath)")
+            return true
+        } catch {
+            Logger.log("[Profile Mixin] Failed: \(error.localizedDescription)", level: .warning)
+            return false
+        }
+    }
+
+    private func mergeProfileMixin(_ mixin: [String: Any], into base: [String: Any]) -> [String: Any] {
+        var merged = base
+        for (key, mixinValue) in mixin {
+            if let baseDict = merged[key] as? [String: Any], let mixinDict = mixinValue as? [String: Any] {
+                merged[key] = mergeProfileMixin(mixinDict, into: baseDict)
+            } else if let baseArray = merged[key] as? [[String: Any]], let mixinArray = mixinValue as? [[String: Any]] {
+                merged[key] = mergeNamedArray(baseArray, with: mixinArray)
+            } else if let baseArray = merged[key] as? [String], let mixinArray = mixinValue as? [String] {
+                merged[key] = baseArray + mixinArray.filter { !baseArray.contains($0) }
+            } else {
+                merged[key] = mixinValue
+            }
+        }
+        return merged
+    }
+
+    private func mergeNamedArray(_ base: [[String: Any]], with mixin: [[String: Any]]) -> [[String: Any]] {
+        var merged = base
+        for item in mixin {
+            if let name = item["name"] as? String,
+               let index = merged.firstIndex(where: { ($0["name"] as? String) == name }) {
+                merged[index] = mergeProfileMixin(item, into: merged[index])
+            } else {
+                merged.append(item)
+            }
+        }
+        return merged
     }
 
     @objc func resetProxySettingOnWakeupFromSleep() {
@@ -957,6 +1022,57 @@ extension AppDelegate {
             enableEnhancedMode(completion: completion)
         } else {
             disableEnhancedMode(completion: completion)
+        }
+    }
+
+    private func installTurnOffProxyMenuItem() {
+        let item = NSMenuItem(
+            title: NSLocalizedString("Turn Off All Proxy Modes", comment: ""),
+            action: #selector(actionTurnOffAllProxyModes(_:)),
+            keyEquivalent: ""
+        )
+        item.target = self
+        item.toolTip = NSLocalizedString(
+            "Disable System Proxy and Enhanced Mode together",
+            comment: ""
+        )
+
+        let parentMenu = proxySettingMenuItem.menu ?? statusMenu
+        let insertIndex = parentMenu?.index(of: proxySettingMenuItem) ?? -1
+        if let menu = parentMenu, insertIndex >= 0 {
+            menu.insertItem(item, at: insertIndex)
+        } else {
+            statusMenu.addItem(item)
+        }
+        turnOffProxyMenuItem = item
+    }
+
+    @objc func actionTurnOffAllProxyModes(_ sender: Any?) {
+        if ConfigManager.shared.proxyPortAutoSet || ConfigManager.shared.isProxySetByOtherVariable.value {
+            ConfigManager.shared.isProxySetByOtherVariable.accept(false)
+            ConfigManager.shared.proxyPortAutoSet = false
+            SystemProxyManager.shared.disableProxy()
+            proxySettingMenuItem.state = .off
+        }
+
+        guard Settings.enhancedMode || ConfigManager.shared.isEnhancedModeActive else {
+            refreshStatusItemViewStatus(systemProxyActive: false)
+            return
+        }
+
+        enhancedModeMenuItem.isEnabled = false
+        disableEnhancedMode { [weak self] error in
+            guard let self = self else { return }
+            self.enhancedModeMenuItem.isEnabled = true
+            if let error = error {
+                Logger.log("Turn off proxy modes failed: \(error)", level: .error)
+                NSUserNotificationCenter.default.postConfigErrorNotice(msg: error)
+                return
+            }
+            Settings.enhancedMode = false
+            self.enhancedModeMenuItem.state = .off
+            Logger.log("All proxy modes disabled")
+            self.scheduleEnhancedModePostToggleRefresh()
         }
     }
 
@@ -1071,7 +1187,7 @@ extension AppDelegate {
         let alert = NSAlert()
         alert.messageText = NSLocalizedString("Advanced TUN Settings", comment: "")
         alert.informativeText = NSLocalizedString(
-            "MTU 1500 matches the real internet path; 4064 is the macOS utun ceiling. Pinning Interface avoids the macOS sleep/wake auto-detect bug. Toggle Enhanced Mode off then on to apply.",
+            "MTU 1500 matches the real internet path; 4064 is the macOS utun ceiling. Pinning Interface avoids the macOS sleep/wake auto-detect bug. Use Custom Config starts Enhanced Mode from your selected config without TUN/DNS injection. Toggle Enhanced Mode off then on to apply.",
             comment: ""
         )
         alert.addButton(withTitle: NSLocalizedString("Apply", comment: ""))
@@ -1095,11 +1211,22 @@ extension AppDelegate {
             comment: ""
         ))
 
-        let stack = NSStackView(views: [mtuLabel, mtuField, ifaceLabel, ifaceField])
+        let customConfigButton = NSButton(
+            checkboxWithTitle: NSLocalizedString("Use Custom Config as-is", comment: ""),
+            target: nil,
+            action: nil
+        )
+        customConfigButton.state = Settings.enhancedModeUseCustomConfig ? .on : .off
+        customConfigButton.toolTip = NSLocalizedString(
+            "Requires your config to define tun, fake-ip DNS, external-controller, and allow-lan correctly.",
+            comment: ""
+        )
+
+        let stack = NSStackView(views: [mtuLabel, mtuField, ifaceLabel, ifaceField, customConfigButton])
         stack.orientation = .vertical
         stack.alignment = .leading
         stack.spacing = 6
-        stack.frame = NSRect(x: 0, y: 0, width: 300, height: 110)
+        stack.frame = NSRect(x: 0, y: 0, width: 340, height: 140)
 
         alert.accessoryView = stack
 
@@ -1116,6 +1243,7 @@ extension AppDelegate {
         Settings.tunInterfaceName = ifaceField.stringValue.trimmingCharacters(
             in: .whitespacesAndNewlines
         )
+        Settings.enhancedModeUseCustomConfig = customConfigButton.state == .on
     }
 
     private func enableEnhancedMode(completion: @escaping (String?) -> Void) {
@@ -1144,8 +1272,29 @@ extension AppDelegate {
 
         ConfigManager.getConfigPath(configName: selectedConfigName) { selectedConfigPath in
             DispatchQueue.global(qos: .userInitiated).async { [weak self] in
+                guard let self = self else { return }
+                let runtimeConfigPath = self.writeRuntimePatchedConfigIfNeeded(
+                    for: selectedConfigName,
+                    sourcePath: selectedConfigPath,
+                    includeRulePatch: false
+                ) ?? selectedConfigPath
+
+                if Settings.enhancedModeUseCustomConfig {
+                    let launchInfo = self.readCustomEnhancedModeLaunchInfo(configPath: runtimeConfigPath)
+                    DispatchQueue.main.async {
+                        self.finishEnhancedModeLaunchPreparation(
+                            result: launchInfo,
+                            configPath: runtimeConfigPath,
+                            attemptsLeft: attemptsLeft,
+                            alreadySuspended: alreadySuspended,
+                            completion: completion
+                        )
+                    }
+                    return
+                }
+
                 let writeResult = clashWriteEnhancedConfig(
-                    selectedConfigPath.goStringBuffer(),
+                    runtimeConfigPath.goStringBuffer(),
                     tempConfigPath.goStringBuffer(),
                     Settings.normalizeAndPersistTunRouteExcludeList().joined(separator: ",").goStringBuffer(),
                     GoUint32(Settings.tunMTU),
@@ -1154,17 +1303,8 @@ extension AppDelegate {
                 )?.toString() ?? ""
 
                 DispatchQueue.main.async {
-                    guard let self = self else { return }
-
-                    let resumeIfNeeded = {
-                        if alreadySuspended {
-                            clashResumeCallbacks()
-                            _ = clashResumeCore()
-                        }
-                    }
-
                     guard !writeResult.hasPrefix("error:") else {
-                        resumeIfNeeded()
+                        self.resumeEnhancedModeCallbacksIfNeeded(alreadySuspended: alreadySuspended)
                         completion(writeResult)
                         return
                     }
@@ -1173,85 +1313,137 @@ extension AppDelegate {
                           let portInfo = try? JSONSerialization.jsonObject(with: jsonData) as? [String: String],
                           let extController = portInfo["externalController"],
                           let port = extController.components(separatedBy: ":").last else {
-                        resumeIfNeeded()
+                        self.resumeEnhancedModeCallbacksIfNeeded(alreadySuspended: alreadySuspended)
                         completion(NSLocalizedString("Failed to parse enhanced config", comment: ""))
                         return
                     }
-                    let secret = portInfo["secret"] ?? ""
 
-                    guard let binaryPath = Bundle.main.path(forResource: "mihomo_core", ofType: nil) else {
-                        resumeIfNeeded()
-                        completion(NSLocalizedString("mihomo_core not found", comment: ""))
-                        return
-                    }
-
-                    guard let helper = PrivilegedHelperManager.shared.helper() else {
-                        resumeIfNeeded()
-                        completion(NSLocalizedString("Helper not available", comment: ""))
-                        return
-                    }
-
-                    // Pause callbacks before suspending core to prevent error storms.
-                    // Only suspend once across the whole retry sequence.
-                    if !alreadySuspended {
-                        clashPauseCallbacks()
-                        clashSuspendCore()
-                    }
-
-                    helper.startMihomoCore(
-                        withBinaryPath: binaryPath,
+                    self.finishEnhancedModeLaunchPreparation(
+                        result: .success(port: port, secret: portInfo["secret"] ?? ""),
                         configPath: tempConfigPath,
-                        homeDir: kConfigFolderPath
-                    ) { [weak self] error in
-                        DispatchQueue.main.async {
-                            if let error = error {
-                                if attemptsLeft > 0 {
-                                    Logger.log("External core launch failed (\(error)), retrying (\(attemptsLeft) left)", level: .warning)
-                                    helper.stopMihomoCore { _ in
-                                        DispatchQueue.main.async {
-                                            self?.attemptEnableEnhancedMode(attemptsLeft: attemptsLeft - 1, alreadySuspended: true, completion: completion)
-                                        }
-                                    }
-                                } else {
-                                    clashResumeCallbacks()
-                                    _ = clashResumeCore()
-                                    completion(error)
-                                }
-                            } else {
-                                ConfigManager.shared.apiPort = port
-                                ConfigManager.shared.apiSecret = secret
-                                ConfigManager.shared.isEnhancedModeActive = true
-                                self?.refreshStatusItemViewStatus()
-                                self?.waitForExternalCore(port: port, secret: secret, retriesLeft: 10) { success in
-                                    if success {
-                                        clashResumeCallbacks()
-                                        self?.verifyTunStatus(port: port, secret: secret)
-                                        self?.overrideDNSForTun()
-                                        completion(nil)
-                                    } else if attemptsLeft > 0 {
-                                        Logger.log("External core not ready, regenerating config and retrying (\(attemptsLeft) left)", level: .warning)
-                                        ConfigManager.shared.isEnhancedModeActive = false
-                                        self?.refreshStatusItemViewStatus()
-                                        helper.stopMihomoCore { _ in
-                                            DispatchQueue.main.async {
-                                                self?.attemptEnableEnhancedMode(attemptsLeft: attemptsLeft - 1, alreadySuspended: true, completion: completion)
-                                            }
-                                        }
-                                    } else {
-                                        Logger.log("External core failed to start, rolling back", level: .error)
-                                        helper.stopMihomoCore { _ in
-                                            DispatchQueue.main.async {
-                                                ConfigManager.shared.isEnhancedModeActive = false
-                                                ConfigManager.shared.isRunning = false
-                                                self?.refreshStatusItemViewStatus()
-                                                clashReopenCacheDB()
-                                                clashResumeCallbacks()
-                                                self?.startProxy()
-                                                completion(NSLocalizedString("Enhanced Mode failed: core not responding", comment: ""))
-                                            }
-                                        }
-                                    }
-                                }
+                        attemptsLeft: attemptsLeft,
+                        alreadySuspended: alreadySuspended,
+                        completion: completion
+                    )
+                }
+            }
+        }
+    }
+
+    private func readCustomEnhancedModeLaunchInfo(configPath: String) -> EnhancedModeLaunchPreparation {
+        do {
+            let yaml = try String(contentsOfFile: configPath, encoding: .utf8)
+            guard let root = try Yams.load(yaml: yaml) as? [String: Any] else {
+                return .failure(NSLocalizedString("Failed to parse enhanced config", comment: ""))
+            }
+            guard let controller = root["external-controller"] as? String,
+                  let port = controller.components(separatedBy: ":").last,
+                  !port.isEmpty,
+                  Int(port) != nil else {
+                return .failure(NSLocalizedString("Custom config must set external-controller", comment: ""))
+            }
+            return .success(port: port, secret: root["secret"] as? String ?? "")
+        } catch {
+            return .failure(error.localizedDescription)
+        }
+    }
+
+    private func resumeEnhancedModeCallbacksIfNeeded(alreadySuspended: Bool) {
+        if alreadySuspended {
+            clashResumeCallbacks()
+            _ = clashResumeCore()
+        }
+    }
+
+    private func finishEnhancedModeLaunchPreparation(
+        result: EnhancedModeLaunchPreparation,
+        configPath: String,
+        attemptsLeft: Int,
+        alreadySuspended: Bool,
+        completion: @escaping (String?) -> Void
+    ) {
+        guard case let .success(port, secret) = result else {
+            resumeEnhancedModeCallbacksIfNeeded(alreadySuspended: alreadySuspended)
+            if case let .failure(error) = result {
+                completion(error)
+            }
+            return
+        }
+
+        guard let binaryPath = Bundle.main.path(forResource: "mihomo_core", ofType: nil) else {
+            resumeEnhancedModeCallbacksIfNeeded(alreadySuspended: alreadySuspended)
+            completion(NSLocalizedString("mihomo_core not found", comment: ""))
+            return
+        }
+
+        guard let helper = PrivilegedHelperManager.shared.helper() else {
+            resumeEnhancedModeCallbacksIfNeeded(alreadySuspended: alreadySuspended)
+            completion(NSLocalizedString("Helper not available", comment: ""))
+            return
+        }
+
+        if !alreadySuspended {
+            clashPauseCallbacks()
+            clashSuspendCore()
+        }
+
+        helper.startMihomoCore(
+            withBinaryPath: binaryPath,
+            configPath: configPath,
+            homeDir: kConfigFolderPath
+        ) { [weak self] error in
+            DispatchQueue.main.async {
+                guard let self = self else { return }
+                if let error = error {
+                    if attemptsLeft > 0, !Settings.enhancedModeUseCustomConfig {
+                        Logger.log("External core launch failed (\(error)), retrying (\(attemptsLeft) left)", level: .warning)
+                        helper.stopMihomoCore { _ in
+                            DispatchQueue.main.async {
+                                self.attemptEnableEnhancedMode(attemptsLeft: attemptsLeft - 1, alreadySuspended: true, completion: completion)
+                            }
+                        }
+                    } else {
+                        clashResumeCallbacks()
+                        _ = clashResumeCore()
+                        completion(error)
+                    }
+                    return
+                }
+
+                ConfigManager.shared.apiPort = port
+                ConfigManager.shared.apiSecret = secret
+                ConfigManager.shared.isEnhancedModeActive = true
+                self.refreshStatusItemViewStatus()
+                self.waitForExternalCore(port: port, secret: secret, retriesLeft: 10) { success in
+                    if success {
+                        clashResumeCallbacks()
+                        if Settings.enhancedModeUseCustomConfig {
+                            Logger.log("Enhanced Mode started with custom config as-is")
+                        } else {
+                            self.verifyTunStatus(port: port, secret: secret)
+                            self.overrideDNSForTun()
+                        }
+                        completion(nil)
+                    } else if attemptsLeft > 0, !Settings.enhancedModeUseCustomConfig {
+                        Logger.log("External core not ready, regenerating config and retrying (\(attemptsLeft) left)", level: .warning)
+                        ConfigManager.shared.isEnhancedModeActive = false
+                        self.refreshStatusItemViewStatus()
+                        helper.stopMihomoCore { _ in
+                            DispatchQueue.main.async {
+                                self.attemptEnableEnhancedMode(attemptsLeft: attemptsLeft - 1, alreadySuspended: true, completion: completion)
+                            }
+                        }
+                    } else {
+                        Logger.log("External core failed to start, rolling back", level: .error)
+                        helper.stopMihomoCore { _ in
+                            DispatchQueue.main.async {
+                                ConfigManager.shared.isEnhancedModeActive = false
+                                ConfigManager.shared.isRunning = false
+                                self.refreshStatusItemViewStatus()
+                                clashReopenCacheDB()
+                                clashResumeCallbacks()
+                                self.startProxy()
+                                completion(NSLocalizedString("Enhanced Mode failed: core not responding", comment: ""))
                             }
                         }
                     }
@@ -1324,7 +1516,7 @@ extension AppDelegate {
                 return
             }
             let selectedConfig = ConfigManager.selectConfigName
-            self?.requestConfigUpdateApplyingRulePatch(configName: selectedConfig) { _ in
+            self?.requestConfigUpdateApplyingRuntimePatch(configName: selectedConfig) { _ in
                 clashResumeCallbacks()
                 completion(nil)
             }
@@ -1711,7 +1903,7 @@ extension AppDelegate {
         ("zh-Hans", "简体中文"),
         ("zh-Hant", "繁體中文"),
         ("ja", "日本語"),
-        ("ru", "Русский"),
+        ("ru", "Русский")
     ]
 
     func setupLanguageMenu() {
@@ -1845,8 +2037,42 @@ extension AppDelegate {
         }
     }
 
+    func setupProfileMixinMenuItem() {
+        guard let configMenu = configSeparatorLine.menu else { return }
+        let item = NSMenuItem(
+            title: NSLocalizedString("Profile Mixin", comment: ""),
+            action: #selector(actionOpenProfileMixinEditor(_:)),
+            keyEquivalent: ""
+        )
+        item.target = self
+        if let editorItem = configEditorMenuItem,
+           let editorIndex = configMenu.items.firstIndex(of: editorItem) {
+            configMenu.insertItem(item, at: editorIndex + 1)
+        } else if let separatorIndex = configMenu.items.firstIndex(of: configSeparatorLine) {
+            configMenu.insertItem(item, at: separatorIndex + 1)
+        }
+        profileMixinMenuItem = item
+    }
+
     @objc func actionOpenConfigEditor(_ sender: Any) {
         ConfigEditorWindowController.show()
+    }
+
+    @objc func actionOpenProfileMixinEditor(_ sender: Any) {
+        if !FileManager.default.fileExists(atPath: Paths.profileMixinPath) {
+            let template = """
+            # Profile Mixin is merged into the selected profile at runtime.
+            # Example:
+            # proxy-groups:
+            #   - name: Auto 1x
+            #     type: url-test
+            #     use:
+            #       - ProviderName
+
+            """
+            try? template.write(toFile: Paths.profileMixinPath, atomically: true, encoding: .utf8)
+        }
+        ConfigEditorWindowController.show(configPath: Paths.profileMixinPath)
     }
 
     @IBAction func openConfigFolder(_ sender: Any) {
@@ -2049,11 +2275,16 @@ extension AppDelegate: NSMenuItemValidation {
         if RemoteControlManager.selectConfig != nil {
             let disabledInRemoteMode: Set<Selector> = [
                 #selector(actionSetSystemProxy(_:)),
+                #selector(actionTurnOffAllProxyModes(_:)),
                 #selector(actionCopyExportCommand(_:))
             ]
             if disabledInRemoteMode.contains(action) {
                 return false
             }
+        }
+
+        if action == #selector(actionTurnOffAllProxyModes(_:)) {
+            return ConfigManager.shared.proxyPortAutoSet || Settings.enhancedMode || ConfigManager.shared.isEnhancedModeActive
         }
 
         return true
@@ -2131,6 +2362,7 @@ extension AppDelegate {
 
         // Proxy Actions group
         let showProxyActions = Settings.trayMenuShowProxyActions
+        turnOffProxyMenuItem?.isHidden = !(showProxyActions && Settings.trayMenuShowTurnOffProxy)
         proxySettingMenuItem.isHidden = !(showProxyActions && Settings.trayMenuShowSystemProxy)
         enhancedModeMenuItem.isHidden = !(showProxyActions && Settings.trayMenuShowEnhancedMode)
         advancedTunMenuItem?.isHidden = !(showProxyActions && Settings.trayMenuShowAdvancedTun)
@@ -2138,7 +2370,7 @@ extension AppDelegate {
         let showCopy = showProxyActions && Settings.trayMenuShowCopyShellCmd
         copyExportCommandMenuItem.isHidden = !showCopy
         copyExportCommandExternalMenuItem.isHidden = !showCopy
-        let anyProxyAction = showProxyActions && (Settings.trayMenuShowSystemProxy || Settings.trayMenuShowEnhancedMode || Settings.trayMenuShowAdvancedTun || Settings.trayMenuShowBypassChineseApps || Settings.trayMenuShowCopyShellCmd)
+        let anyProxyAction = showProxyActions && (Settings.trayMenuShowTurnOffProxy || Settings.trayMenuShowSystemProxy || Settings.trayMenuShowEnhancedMode || Settings.trayMenuShowAdvancedTun || Settings.trayMenuShowBypassChineseApps || Settings.trayMenuShowCopyShellCmd)
         proxyActionsSeparator.isHidden = !anyProxyAction
 
         // General Settings group
@@ -2163,9 +2395,17 @@ extension AppDelegate {
 
         // Configs group
         let showConfigs = Settings.trayMenuShowConfigs
-        let anyConfigChild = Settings.trayMenuShowConfigSwitcher || Settings.trayMenuShowConfigEditor || Settings.trayMenuShowOpenConfigFolder || Settings.trayMenuShowReloadConfig || Settings.trayMenuShowUpdateExternal || Settings.trayMenuShowRemoteConfig || Settings.trayMenuShowRemoteController
+        let anyConfigChild = Settings.trayMenuShowConfigSwitcher
+            || Settings.trayMenuShowConfigEditor
+            || Settings.trayMenuShowProfileMixin
+            || Settings.trayMenuShowOpenConfigFolder
+            || Settings.trayMenuShowReloadConfig
+            || Settings.trayMenuShowUpdateExternal
+            || Settings.trayMenuShowRemoteConfig
+            || Settings.trayMenuShowRemoteController
         configsMenuItem.isHidden = !(showConfigs && anyConfigChild)
         configEditorMenuItem?.isHidden = !(showConfigs && Settings.trayMenuShowConfigEditor)
+        profileMixinMenuItem?.isHidden = !(showConfigs && Settings.trayMenuShowProfileMixin)
         openConfigFolderMenuItem.isHidden = !(showConfigs && Settings.trayMenuShowOpenConfigFolder)
         reloadConfigMenuItem.isHidden = !(showConfigs && Settings.trayMenuShowReloadConfig)
         updateExternalResourceMenuItem.isHidden = !(showConfigs && Settings.trayMenuShowUpdateExternal)

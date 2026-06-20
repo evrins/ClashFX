@@ -223,6 +223,9 @@ enum Settings {
     @UserDefault("enhancedMode", defaultValue: false)
     static var enhancedMode: Bool
 
+    @UserDefault("enhancedModeUseCustomConfig", defaultValue: false)
+    static var enhancedModeUseCustomConfig: Bool
+
     @UserDefault("bypassChineseApps", defaultValue: false)
     static var bypassChineseApps: Bool
 
@@ -246,6 +249,9 @@ enum Settings {
 
     @UserDefault("trayMenuShowSystemProxy", defaultValue: true)
     static var trayMenuShowSystemProxy: Bool
+
+    @UserDefault("trayMenuShowTurnOffProxy", defaultValue: true)
+    static var trayMenuShowTurnOffProxy: Bool
 
     @UserDefault("trayMenuShowEnhancedMode", defaultValue: true)
     static var trayMenuShowEnhancedMode: Bool
@@ -294,6 +300,9 @@ enum Settings {
 
     @UserDefault("trayMenuShowConfigEditor", defaultValue: true)
     static var trayMenuShowConfigEditor: Bool
+
+    @UserDefault("trayMenuShowProfileMixin", defaultValue: true)
+    static var trayMenuShowProfileMixin: Bool
 
     @UserDefault("trayMenuShowOpenConfigFolder", defaultValue: true)
     static var trayMenuShowOpenConfigFolder: Bool
