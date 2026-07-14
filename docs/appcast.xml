@@ -6,6 +6,429 @@
     <description>Most recent ClashFX updates</description>
     <language>en</language>
     <item>
+  <title>Version 1.1.7.3 (Lab)</title>
+  <description><![CDATA[
+    <h2>ClashFX v1.1.7.3 (Lab)</h2><ul><li><strong>Managed Config Table Fits Its Contents</strong> — The managed-config window now reserves enough room for the update-time column on its first display, without requiring a manual window resize. (#147)</li><li><strong>Configurable Delay-Test Shortcut</strong> — Delay tests can now be assigned a global shortcut in Settings. It has no default binding, so it will not conflict with existing shortcuts. (#147)</li><li><strong>iCloud Storage Fails Safely</strong> — Enabling iCloud-backed config storage now warns and restores the local-storage setting when iCloud is unavailable. (#147)</li></ul>
+  ]]></description>
+  <pubDate>Mon, 13 Jul 2026 08:15:56 +0000</pubDate>
+  <sparkle:version>1001007003</sparkle:version>
+  <sparkle:shortVersionString>1.1.7.3</sparkle:shortVersionString>
+            <sparkle:channel>lab</sparkle:channel>
+          <sparkle:minimumSystemVersion>10.14</sparkle:minimumSystemVersion>
+  <enclosure
+    url="https://github.com/Clash-FX/ClashFX/releases/download/1.1.7.3/ClashFX.dmg"
+    sparkle:version="1001007003"
+    sparkle:shortVersionString="1.1.7.3"
+    sparkle:edSignature="AYaPM5zAo14x1AJ1ikeRVpJfjJanrP5jrl0RtrMcqHT+Xz9e2MrPoKHoPFsXUN3O2vrgDiAcieqlBYLBwDh1Dw=="
+    length="95435307"
+    type="application/x-apple-diskimage"
+  />
+</item>
+    <item>
+  <title>Version 1.1.7.2 (Lab)</title>
+  <description><![CDATA[
+    <h2>ClashFX v1.1.7.2 (Lab)</h2><ul><li><strong>Delay Tests Stay Manual</strong> — Removed the startup retry for delay tests. Benchmarks now run only when explicitly started by the user, avoiding extra network requests while ClashFX and its configuration are still starting. (#147)</li><li><strong>Config Menu Is Clearer</strong> — Renamed Profile Mixin to Config Patch (Profile Mixin), grouped it with Config Editor and current-config actions, and renamed external-resource updates to clarify that they refresh rule and proxy providers rather than managed configurations. (#147)</li></ul>
+  ]]></description>
+  <pubDate>Sat, 11 Jul 2026 08:30:22 +0000</pubDate>
+  <sparkle:version>1001007002</sparkle:version>
+  <sparkle:shortVersionString>1.1.7.2</sparkle:shortVersionString>
+            <sparkle:channel>lab</sparkle:channel>
+          <sparkle:minimumSystemVersion>10.14</sparkle:minimumSystemVersion>
+  <enclosure
+    url="https://github.com/Clash-FX/ClashFX/releases/download/1.1.7.2/ClashFX.dmg"
+    sparkle:version="1001007002"
+    sparkle:shortVersionString="1.1.7.2"
+    sparkle:edSignature="xRb8pTNF/8g8hSNyp5+eE8IFaoOq/LeaEOu5OpGBrMl/c4uAZgGPE9d4aQrnf5e2dih4kTupLIRbKjbi062mDA=="
+    length="95601355"
+    type="application/x-apple-diskimage"
+  />
+</item>
+    <item>
+  <title>Version 1.1.7.1 (Lab)</title>
+  <description><![CDATA[
+    <h2>ClashFX v1.1.7.1 (Lab)</h2><ul><li><strong>Config Selection Follows Local and iCloud Storage</strong> — Local and iCloud storage now remember their selected configurations independently. Switching storage restores the target location's previous selection, or chooses a non-default configuration when no selection has been saved yet. (#129)</li><li><strong>Delay Results Return After Restart</strong> — After a manual delay benchmark, ClashFX remembers the active configuration and test parameters, then silently repeats the benchmark once after the next matching startup. (#147)</li><li><strong>Proxy Speed Is Clearly Labeled</strong> — The menu-bar indicator now identifies itself as ClashFX proxy traffic and explains that it does not represent total system network speed. (#147)</li><li><strong>Optional Dock Icon Hiding</strong> — General settings now includes a disabled-by-default "Hide Dock Icon" switch. When enabled, ClashFX remains available from the menu bar without appearing in the Dock. (#147)</li></ul>
+  ]]></description>
+  <pubDate>Sat, 11 Jul 2026 04:00:08 +0000</pubDate>
+  <sparkle:version>1001007001</sparkle:version>
+  <sparkle:shortVersionString>1.1.7.1</sparkle:shortVersionString>
+            <sparkle:channel>lab</sparkle:channel>
+          <sparkle:minimumSystemVersion>10.14</sparkle:minimumSystemVersion>
+  <enclosure
+    url="https://github.com/Clash-FX/ClashFX/releases/download/1.1.7.1/ClashFX.dmg"
+    sparkle:version="1001007001"
+    sparkle:shortVersionString="1.1.7.1"
+    sparkle:edSignature="7qOdZTl6gxhylN6JD9T5ha1BgonXaQEqw3VgAey7uZby69PmlDm7EFVfZDSIylfL/1Q1ghYIatR0ItEIpfZtBQ=="
+    length="96012380"
+    type="application/x-apple-diskimage"
+  />
+</item>
+    <item>
+  <title>Version 1.1.7</title>
+  <description><![CDATA[
+    <h2>ClashFX v1.1.7</h2><ul><li><strong>iCloud Config Switching Refreshes Immediately</strong> — Switching the iCloud config-storage option now refreshes the configuration list and reloads a valid configuration from the newly selected storage location without requiring an app restart. (#129)</li><li><strong>Remote Config Renames Keep Working</strong> — When a subscription replaces its placeholder filename with the server-provided name, ClashFX now updates the active-config and remembered proxy references and removes the obsolete file. (#129)</li><li><strong>Settings Section Headers Are Clearer</strong> — Section headers now sit above their cards with consistent spacing, use a distinct secondary style, and no longer clip or run into the preceding section. General settings also adds meaningful headers for application, network automation, connectivity test, and bypass-rule sections. (#129)</li><li><strong>Copy Shortcuts No Longer Intercept Command-C</strong> — The two copy-command shortcuts now default to Control-Option-C and Control-Option-Shift-C. Existing Command-C and Option-Command-C bindings are migrated automatically once so normal system copy works again. (#129)</li><li><strong>Enhanced Mode Has a Real Global Shortcut</strong> — Enhanced Mode now uses a configurable global shortcut with the default Control-Option-E, avoiding the earlier Command-Shift-E conflict with Xcode. (#129)</li></ul>
+  ]]></description>
+  <pubDate>Sat, 11 Jul 2026 02:52:52 +0000</pubDate>
+  <sparkle:version>1001007000</sparkle:version>
+  <sparkle:shortVersionString>1.1.7</sparkle:shortVersionString>
+            <sparkle:minimumSystemVersion>10.14</sparkle:minimumSystemVersion>
+  <enclosure
+    url="https://github.com/Clash-FX/ClashFX/releases/download/1.1.7/ClashFX.dmg"
+    sparkle:version="1001007000"
+    sparkle:shortVersionString="1.1.7"
+    sparkle:edSignature="uqjEzt+puNyGXNt4opY5e0ciUlbUwbcK6Y2/JnxaR4p2gsosTsigKmzOh85YTzGamg5w5OQ5U9U7Rj5jJRgXBQ=="
+    length="95566221"
+    type="application/x-apple-diskimage"
+  />
+</item>
+    <item>
+  <title>Version 1.1.6.2 (Lab)</title>
+  <description><![CDATA[
+    <h2>ClashFX v1.1.6.2 (Lab)</h2><ul><li><strong>Settings Section Headers Are Clearer</strong> — Section headers now sit above their cards with consistent spacing, use a distinct secondary style, and no longer clip or run into the preceding section. General settings also adds meaningful headers for application, network automation, connectivity test, and bypass-rule sections. (#129)</li><li><strong>Copy Shortcuts No Longer Intercept Command-C</strong> — The two copy-command shortcuts now default to Control-Option-C and Control-Option-Shift-C. Existing Command-C and Option-Command-C bindings are migrated automatically once so normal system copy works again. (#129)</li></ul>
+  ]]></description>
+  <pubDate>Fri, 10 Jul 2026 03:09:19 +0000</pubDate>
+  <sparkle:version>1001006002</sparkle:version>
+  <sparkle:shortVersionString>1.1.6.2</sparkle:shortVersionString>
+            <sparkle:channel>lab</sparkle:channel>
+          <sparkle:minimumSystemVersion>10.14</sparkle:minimumSystemVersion>
+  <enclosure
+    url="https://github.com/Clash-FX/ClashFX/releases/download/1.1.6.2/ClashFX.dmg"
+    sparkle:version="1001006002"
+    sparkle:shortVersionString="1.1.6.2"
+    sparkle:edSignature="agv2/vZzfYPITx1h6hwteB0YQ8L02oFgeJu+LvReUtJs/YjQftgYpDXCXhFAA1RUFwkL2LWUtKGqOw4jlHmwBA=="
+    length="95992731"
+    type="application/x-apple-diskimage"
+  />
+</item>
+    <item>
+  <title>Version 1.1.6.1 (Lab)</title>
+  <description><![CDATA[
+    <h2>ClashFX v1.1.6.1 (Lab)</h2><ul><li><strong>Settings Stays Inside the Active Screen</strong> — The fixed Settings window now derives its size from the active display's visible work area, including the title bar, so it remains above the Dock on smaller or third-party displays. Extra page-bottom space also keeps the final section fully reachable. (#129)</li><li><strong>Enhanced Mode Has a Real Global Shortcut</strong> — Enhanced Mode is now registered as a configurable global shortcut instead of a ClashFX-only menu shortcut. Its new default is Control-Option-E, avoiding the former Command-Shift-E conflict with Xcode. (#129)</li></ul>
+  ]]></description>
+  <pubDate>Fri, 10 Jul 2026 02:18:28 +0000</pubDate>
+  <sparkle:version>1001006001</sparkle:version>
+  <sparkle:shortVersionString>1.1.6.1</sparkle:shortVersionString>
+            <sparkle:channel>lab</sparkle:channel>
+          <sparkle:minimumSystemVersion>10.14</sparkle:minimumSystemVersion>
+  <enclosure
+    url="https://github.com/Clash-FX/ClashFX/releases/download/1.1.6.1/ClashFX.dmg"
+    sparkle:version="1001006001"
+    sparkle:shortVersionString="1.1.6.1"
+    sparkle:edSignature="W78HnclQHG7Al8tdhpFtuzyFXM3GtuQwvDRNndTWioSZJykJyJmNurIVrVoQtNM9RzLmQfp9jV3r0xG2kx8zDQ=="
+    length="95545283"
+    type="application/x-apple-diskimage"
+  />
+</item>
+    <item>
+  <title>Version 1.1.6</title>
+  <description><![CDATA[
+    <h2>ClashFX v1.1.6</h2><ul><li><strong>Enhanced Mode Keeps the Selected Outbound Mode</strong> — Reapplies the saved Direct/Rule/Global mode after the external core starts, so enabling TUN/Enhanced Mode no longer falls back to rule mode while the menu still shows Global. (#155)</li><li><strong>Settings Uses a Fixed Sidebar Layout</strong> — Reworked More Settings into a macOS-style sidebar layout with a fixed safe window size and scrollable pages, avoiding the top tab sizing issues that could leave the first page blank or put controls behind the Dock. (#129)</li><li><strong>Settings Sidebar Shows the Current App Icon</strong> — Added a ClashFX brand header to the Settings sidebar and keeps it in sync when the app icon is changed from Appearance settings. (#129)</li><li><strong>Dashboard Opens MetaCubeXD With the Active Secret</strong> — Replaced the bundled web dashboard with MetaCubeXD and opens it through ClashFX's local `/ui/` setup route with the current API port and secret, so it no longer stops at the setup screen with `secret rejected`. (#129)</li><li><strong>Dock Reopen No Longer Pops the Tray Menu</strong> — Clicking the Dock icon now only brings existing ClashFX windows forward and does not simulate a tray icon click. (#129)</li><li><strong>Shortcut Menus Reflect Custom Hotkeys</strong> — Proxy mode and utility menu items now show the currently configured global shortcut instead of always showing the default key equivalent. (#129)</li></ul>
+  ]]></description>
+  <pubDate>Thu, 09 Jul 2026 10:55:04 +0000</pubDate>
+  <sparkle:version>1001006000</sparkle:version>
+  <sparkle:shortVersionString>1.1.6</sparkle:shortVersionString>
+            <sparkle:minimumSystemVersion>10.14</sparkle:minimumSystemVersion>
+  <enclosure
+    url="https://github.com/Clash-FX/ClashFX/releases/download/1.1.6/ClashFX.dmg"
+    sparkle:version="1001006000"
+    sparkle:shortVersionString="1.1.6"
+    sparkle:edSignature="TnTg1wvZ+vj4LzoGf9Wiy5XUn9vWNsxxqImp15LZr0oRqLCLeeR0fGLsIkX76HHqgCgAaeytgWe6Cpm+RacAAA=="
+    length="95558650"
+    type="application/x-apple-diskimage"
+  />
+</item>
+    <item>
+  <title>Version 1.1.5.12 (Lab)</title>
+  <description><![CDATA[
+    <h2>ClashFX v1.1.5.12 (Lab)</h2><ul><li><strong>Settings Uses Sidebar Layout</strong> — Reworked More Settings into a macOS-style sidebar layout, avoiding the top tab sizing issues that could leave the first page blank or block resizing. (#129)</li><li><strong>Settings Sidebar Shows the Current App Icon</strong> — Added a ClashFX brand header to the Settings sidebar and keeps it in sync when the app icon is changed from Appearance settings. (#129)</li><li><strong>Settings Resizes Normally Again</strong> — Removed the experimental tab wrapper and hard maximum content size so Settings can resize vertically and horizontally across General, Appearance, Global Shortcuts, and Debug. (#129)</li><li><strong>Dashboard Opens MetaCubeXD With the Active Secret</strong> — Replaced the bundled web dashboard with MetaCubeXD and opens it through ClashFX's local `/ui/` setup route with the current API port and secret, so it no longer stops at the setup screen with `secret rejected`. (#129)</li><li><strong>Dock Reopen No Longer Pops the Tray Menu</strong> — Clicking the Dock icon now only brings existing ClashFX windows forward and does not simulate a tray icon click. (#129)</li></ul>
+  ]]></description>
+  <pubDate>Tue, 07 Jul 2026 13:20:18 +0000</pubDate>
+  <sparkle:version>1001005012</sparkle:version>
+  <sparkle:shortVersionString>1.1.5.12</sparkle:shortVersionString>
+            <sparkle:channel>lab</sparkle:channel>
+          <sparkle:minimumSystemVersion>10.14</sparkle:minimumSystemVersion>
+  <enclosure
+    url="https://github.com/Clash-FX/ClashFX/releases/download/1.1.5.12/ClashFX.dmg"
+    sparkle:version="1001005012"
+    sparkle:shortVersionString="1.1.5.12"
+    sparkle:edSignature="ey9yvKc51pb5T6G0NxqD6cx5443B1ZfuClKHnybK/nTUrw61G8MOl3BnyOCy/icDc/Gf7Srr//Sihr7jpnW3BQ=="
+    length="95984267"
+    type="application/x-apple-diskimage"
+  />
+</item>
+    <item>
+  <title>Version 1.1.5.10 (Lab)</title>
+  <description><![CDATA[
+    <h2>ClashFX v1.1.5.10 (Lab)</h2><ul><li><strong>Appearance Settings Fills the Window on Open</strong> — Fixed an initial layout pass issue where the Appearance settings view could leave a dark strip at the bottom until the window was manually resized. (#129)</li></ul>
+  ]]></description>
+  <pubDate>Tue, 07 Jul 2026 04:27:51 +0000</pubDate>
+  <sparkle:version>1001005010</sparkle:version>
+  <sparkle:shortVersionString>1.1.5.10</sparkle:shortVersionString>
+            <sparkle:channel>lab</sparkle:channel>
+          <sparkle:minimumSystemVersion>10.14</sparkle:minimumSystemVersion>
+  <enclosure
+    url="https://github.com/Clash-FX/ClashFX/releases/download/1.1.5.10/ClashFX.dmg"
+    sparkle:version="1001005010"
+    sparkle:shortVersionString="1.1.5.10"
+    sparkle:edSignature="C8IJdZMU77Y/iUR54rHLHsJKYwXxLjJoL0TKI9FRy67BAeTE1D9gsSALFLx2LZTmEpgv/wj6+Tr7mnv968AlCA=="
+    length="95487348"
+    type="application/x-apple-diskimage"
+  />
+</item>
+    <item>
+  <title>Version 1.1.5.9 (Lab)</title>
+  <description><![CDATA[
+    <h2>ClashFX v1.1.5.9 (Lab)</h2><ul><li><strong>Settings Window Resizing Works Again</strong> — The Settings window now stays resizable while clamping only its maximum size and current frame to the visible screen area. It also reapplies the clamp after restoring a previously saved window size, so old oversized settings windows no longer slip behind the Dock. (#129)</li></ul>
+  ]]></description>
+  <pubDate>Tue, 07 Jul 2026 03:57:06 +0000</pubDate>
+  <sparkle:version>1001005009</sparkle:version>
+  <sparkle:shortVersionString>1.1.5.9</sparkle:shortVersionString>
+            <sparkle:channel>lab</sparkle:channel>
+          <sparkle:minimumSystemVersion>10.14</sparkle:minimumSystemVersion>
+  <enclosure
+    url="https://github.com/Clash-FX/ClashFX/releases/download/1.1.5.9/ClashFX.dmg"
+    sparkle:version="1001005009"
+    sparkle:shortVersionString="1.1.5.9"
+    sparkle:edSignature="EtZb4S/YgZjpaHltB2/I4Eg5VOq+Qp+kSlPcQYO9Mh6/VSxOhhMTWTgophQBWisc5GTn6WJOWxT6wMIbgH9xAg=="
+    length="95956401"
+    type="application/x-apple-diskimage"
+  />
+</item>
+    <item>
+  <title>Version 1.1.5.8 (Lab)</title>
+  <description><![CDATA[
+    <h2>ClashFX v1.1.5.8 (Lab)</h2><ul><li><strong>Settings Window Stays Above the Dock</strong> — Settings now clamps its window frame to the current screen's visible area when opening or switching tabs, accounting for the titlebar/tab chrome so the Appearance tray-menu options remain reachable without entering full screen. (#129)</li></ul>
+  ]]></description>
+  <pubDate>Tue, 07 Jul 2026 03:35:01 +0000</pubDate>
+  <sparkle:version>1001005008</sparkle:version>
+  <sparkle:shortVersionString>1.1.5.8</sparkle:shortVersionString>
+            <sparkle:channel>lab</sparkle:channel>
+          <sparkle:minimumSystemVersion>10.14</sparkle:minimumSystemVersion>
+  <enclosure
+    url="https://github.com/Clash-FX/ClashFX/releases/download/1.1.5.8/ClashFX.dmg"
+    sparkle:version="1001005008"
+    sparkle:shortVersionString="1.1.5.8"
+    sparkle:edSignature="VI15doUVgDfLyxAiKE+oDrRd2FrvUZd+BAxHN67X3uG3ksOCnRuqdyth6CcNkthQF2d/PsIKKMP1OXi0LynpCw=="
+    length="95482551"
+    type="application/x-apple-diskimage"
+  />
+</item>
+    <item>
+  <title>Version 1.1.5.7 (Lab)</title>
+  <description><![CDATA[
+    <h2>ClashFX v1.1.5.7 (Lab)</h2><ul><li><strong>Web Dashboard No Longer Shows a White Top Bar in Full Screen</strong> — The Dashboard menu window now uses a standard content layout instead of a transparent full-size titlebar with an empty macOS toolbar, and removes the old 28px dashboard padding patch. This keeps the Web dashboard navigation visible when the window enters full screen. (#129)</li></ul>
+  ]]></description>
+  <pubDate>Tue, 07 Jul 2026 03:04:30 +0000</pubDate>
+  <sparkle:version>1001005007</sparkle:version>
+  <sparkle:shortVersionString>1.1.5.7</sparkle:shortVersionString>
+            <sparkle:channel>lab</sparkle:channel>
+          <sparkle:minimumSystemVersion>10.14</sparkle:minimumSystemVersion>
+  <enclosure
+    url="https://github.com/Clash-FX/ClashFX/releases/download/1.1.5.7/ClashFX.dmg"
+    sparkle:version="1001005007"
+    sparkle:shortVersionString="1.1.5.7"
+    sparkle:edSignature="ri6VuA0XTfr6ese57pIPW+PfRsgFn1Tm88voZBJms7Ch8i7mXAUwu58+aeiBOiX6kkdQakbrPURLsaVdY7KGCg=="
+    length="95486196"
+    type="application/x-apple-diskimage"
+  />
+</item>
+    <item>
+  <title>Version 1.1.5.6 (Lab)</title>
+  <description><![CDATA[
+    <h2>ClashFX v1.1.5.6 (Lab)</h2><ul><li><strong>Dashboard Header No Longer Gets Covered in Full Screen</strong> — The native dashboard now uses an in-window header instead of a macOS toolbar, so the Recent/Active Connections switcher and search field stay visible when the dashboard enters full screen. (#129)</li><li><strong>Profile Mixin iCloud Sync Uses a Visible File and Reloads Cleanly</strong> — When iCloud config storage is enabled, ClashFX now migrates the local or legacy hidden mixin into a visible `Profile Mixin.yaml` file in iCloud Documents, filters it out of normal config lists, refreshes the config menu, watches the iCloud-selected config, and reloads it without requiring an app restart. (#129)</li><li><strong>Subscription Rules Editor Keeps Profile Buckets Out of Normal Configs</strong> — The visual Rules editor now keeps the rule bucket selector disabled on normal subscription configs and only exposes `profile.prepend-rules` / `profile.append-rules` when editing Profile Mixin, avoiding accidental edits to Profile-only rule buckets from the config editor. (#129)</li></ul>
+  ]]></description>
+  <pubDate>Mon, 06 Jul 2026 08:51:23 +0000</pubDate>
+  <sparkle:version>1001005006</sparkle:version>
+  <sparkle:shortVersionString>1.1.5.6</sparkle:shortVersionString>
+            <sparkle:channel>lab</sparkle:channel>
+          <sparkle:minimumSystemVersion>10.14</sparkle:minimumSystemVersion>
+  <enclosure
+    url="https://github.com/Clash-FX/ClashFX/releases/download/1.1.5.6/ClashFX.dmg"
+    sparkle:version="1001005006"
+    sparkle:shortVersionString="1.1.5.6"
+    sparkle:edSignature="HuborlYIdjRZMdQ0sLzBnqGOz9esAjQjc6HeHlDRSaNHXnqjohW59HCaX3b8GrYCtPQYWLcchM/BArwhmy1zCw=="
+    length="95955356"
+    type="application/x-apple-diskimage"
+  />
+</item>
+    <item>
+  <title>Version 1.1.5.5 (Lab)</title>
+  <description><![CDATA[
+    <h2>ClashFX v1.1.5.5 (Lab)</h2><ul><li><strong>Profile Mixin Visual Editor Opens the Right Rule Bucket</strong> — When a Profile Mixin only contains `profile.prepend-rules` or `profile.append-rules`, switching from source view to visual mode now automatically selects the non-empty Profile rule bucket instead of showing an empty top-level `rules` table. (#129)</li><li><strong>Profile Mixin and Config Editor Can Open Side by Side</strong> — Opening Config Editor while the Profile Mixin editor is already visible now opens or focuses the selected profile editor instead of silently reusing the existing Profile Mixin window. The config picker also includes a Profile Mixin entry for direct navigation. (#129)</li><li><strong>Profile Mixin Follows iCloud Config Storage</strong> — When iCloud config storage is enabled, the Profile Mixin file now resolves to the iCloud Documents container as well, so custom mixin rules stay with the rest of the synced configuration set. (#129)</li><li><strong>ClashFX Networking Is Direct in Enhanced Mode</strong> — Enhanced Mode now prepends a built-in `PROCESS-NAME,ClashFX Networking,DIRECT` rule before subscription rules so the networking helper is not accidentally routed by a provider rule. (#129)</li><li><strong>iCloud Settings Toggle Reflects the User Choice</strong> — The iCloud checkbox now stays responsive to the saved user preference even when iCloud availability temporarily prevents syncing, instead of immediately snapping back based on the effective runtime state.</li></ul>
+  ]]></description>
+  <pubDate>Sat, 04 Jul 2026 08:09:47 +0000</pubDate>
+  <sparkle:version>1001005005</sparkle:version>
+  <sparkle:shortVersionString>1.1.5.5</sparkle:shortVersionString>
+            <sparkle:channel>lab</sparkle:channel>
+          <sparkle:minimumSystemVersion>10.14</sparkle:minimumSystemVersion>
+  <enclosure
+    url="https://github.com/Clash-FX/ClashFX/releases/download/1.1.5.5/ClashFX.dmg"
+    sparkle:version="1001005005"
+    sparkle:shortVersionString="1.1.5.5"
+    sparkle:edSignature="Avpg67Ap3hFMdvol+VCzQl5GYK7uu6a6bc9KT2zG4Bmahfm6NrRa6WBVe2egBj5ZOzaU3Bsyx+JYJ5gKmr78Aw=="
+    length="97843944"
+    type="application/x-apple-diskimage"
+  />
+</item>
+    <item>
+  <title>Version 1.1.5.4 (Lab)</title>
+  <description><![CDATA[
+    <h2>ClashFX v1.1.5.4 (Lab)</h2><ul><li><strong>Profile Rule Buckets Show in the Visual Editor</strong> — The Rules visual editor now lets you switch between top-level `rules`, `profile.prepend-rules`, and `profile.append-rules`, so Profile Mixin rule directives added in source view are visible and editable without falling back to raw YAML. ClashFX also expands config-embedded `profile.prepend-rules` into runtime rules before subscription rules, and warns when PROCESS rules need Enhanced Mode to match. (#129)</li></ul>
+  ]]></description>
+  <pubDate>Fri, 03 Jul 2026 02:42:41 +0000</pubDate>
+  <sparkle:version>1001005004</sparkle:version>
+  <sparkle:shortVersionString>1.1.5.4</sparkle:shortVersionString>
+            <sparkle:channel>lab</sparkle:channel>
+          <sparkle:minimumSystemVersion>10.14</sparkle:minimumSystemVersion>
+  <enclosure
+    url="https://github.com/Clash-FX/ClashFX/releases/download/1.1.5.4/ClashFX.dmg"
+    sparkle:version="1001005004"
+    sparkle:shortVersionString="1.1.5.4"
+    sparkle:edSignature="kXDiPlgt/mfNTtpsliR6+5yR67/3jn6HchKBqtTxQ132FdpMF3S4AeiguMvj6pjC2Pr2cQ7qXTUWB7MKoqH+Ag=="
+    length="97834281"
+    type="application/x-apple-diskimage"
+  />
+</item>
+    <item>
+  <title>Version 1.1.5.3 (Lab)</title>
+  <description><![CDATA[
+    <h2>ClashFX v1.1.5.3 (Lab)</h2><ul><li><strong>Profile Mixin Rule Directives Now Work</strong> — ClashFX now understands `profile.prepend-rules` and `profile.append-rules` in Profile Mixin files, translating them into real runtime `rules` before loading mihomo. Prepended rules are inserted before the existing rule list so DIRECT/process exclusions are not hidden behind `MATCH`.</li></ul>
+  ]]></description>
+  <pubDate>Thu, 02 Jul 2026 12:36:41 +0000</pubDate>
+  <sparkle:version>1001005003</sparkle:version>
+  <sparkle:shortVersionString>1.1.5.3</sparkle:shortVersionString>
+            <sparkle:channel>lab</sparkle:channel>
+          <sparkle:minimumSystemVersion>10.14</sparkle:minimumSystemVersion>
+  <enclosure
+    url="https://github.com/Clash-FX/ClashFX/releases/download/1.1.5.3/ClashFX.dmg"
+    sparkle:version="1001005003"
+    sparkle:shortVersionString="1.1.5.3"
+    sparkle:edSignature="oh33n4S/rWq+HyZC7FwRJUr3+bEDQqpEPinbkr/OzHl/NT6wy1oaqAiwA5Kt7CRyJqta8Gm3hNk81KUxQlwRAQ=="
+    length="97837504"
+    type="application/x-apple-diskimage"
+  />
+</item>
+    <item>
+  <title>Version 1.1.5.2 (Lab)</title>
+  <description><![CDATA[
+    <h2>ClashFX v1.1.5.2 (Lab)</h2><ul><li><strong>Proxy Recovers After Wake From Sleep</strong> — After macOS wakes from lid-close sleep, ClashFX now delays recovery until the network interface is ready, checks whether the mihomo API is still healthy, and restarts the active proxy mode when needed. This should avoid the state where proxy traffic stays broken until the app is manually restarted. (#142)</li><li><strong>Menu Bar Speed Font Restored</strong> — The menu bar upload/download speed text now uses the original ClashFX menu font again, preserving the latest macOS 26 custom drawing optimization while reverting the visual font regression.</li></ul>
+  ]]></description>
+  <pubDate>Thu, 02 Jul 2026 05:13:58 +0000</pubDate>
+  <sparkle:version>1001005002</sparkle:version>
+  <sparkle:shortVersionString>1.1.5.2</sparkle:shortVersionString>
+            <sparkle:channel>lab</sparkle:channel>
+          <sparkle:minimumSystemVersion>10.14</sparkle:minimumSystemVersion>
+  <enclosure
+    url="https://github.com/Clash-FX/ClashFX/releases/download/1.1.5.2/ClashFX.dmg"
+    sparkle:version="1001005002"
+    sparkle:shortVersionString="1.1.5.2"
+    sparkle:edSignature="I53EXdFWxaJA4/g0XSEOhdTdhyUKpT7cIzn9fmEdBherZwkkci7idS1+D7sU68AKjmgeQN7tAznKXBFJ81W2DA=="
+    length="98318669"
+    type="application/x-apple-diskimage"
+  />
+</item>
+    <item>
+  <title>Version 1.1.5.1 (Lab)</title>
+  <description><![CDATA[
+    <h2>ClashFX v1.1.5.1 (Lab)</h2><ul><li><strong>Custom Enhanced Mode Now Applies macOS DNS Override</strong> — When `Use Custom Config as-is` is enabled, ClashFX still keeps the selected config file untouched, but Enhanced Mode now runs the same TUN verification and temporary macOS DNS override as the generated-config path. This prevents system DNS from staying on the router DNS while the custom TUN core is running. (#139)</li></ul>
+  ]]></description>
+  <pubDate>Fri, 26 Jun 2026 07:46:02 +0000</pubDate>
+  <sparkle:version>1001005001</sparkle:version>
+  <sparkle:shortVersionString>1.1.5.1</sparkle:shortVersionString>
+            <sparkle:channel>lab</sparkle:channel>
+          <sparkle:minimumSystemVersion>10.14</sparkle:minimumSystemVersion>
+  <enclosure
+    url="https://github.com/Clash-FX/ClashFX/releases/download/1.1.5.1/ClashFX.dmg"
+    sparkle:version="1001005001"
+    sparkle:shortVersionString="1.1.5.1"
+    sparkle:edSignature="cwG7aI88p9ohOvQV8tf572QqANwo1aBaPjNlzSeTA+sym5lEH0629on9/8uk/aGgZTbBmnuLP3XNtFcjLdl/Aw=="
+    length="95706305"
+    type="application/x-apple-diskimage"
+  />
+</item>
+    <item>
+  <title>Version 1.1.5</title>
+  <description><![CDATA[
+    <h2>ClashFX v1.1.5</h2>
+    <h3>New Features</h3>
+    <ul>
+      <li><strong>Profile Mixin for Runtime Configs</strong> — Add a Profile Mixin editor backed by <code>~/.config/clashfx/.profile_mixin.yaml</code>, applied at runtime during reloads and Enhanced Mode starts so custom groups and rules survive subscription updates. (#129)</li>
+      <li><strong>Turn Off All Proxy Modes</strong> — Add a tray-menu action that disables both System Proxy and Enhanced Mode at once, with a visibility setting for the shortcut. (#130)</li>
+      <li><strong>Use Custom Enhanced Mode Config As-Is</strong> — Advanced TUN Settings can now start Enhanced Mode directly from the selected/runtime config without injecting ClashFX-generated TUN or DNS settings. (#118)</li>
+    </ul>
+    <h3>Bug Fixes</h3>
+    <ul>
+      <li><strong>Menu Bar Speed Display Is Compact and Stable</strong> — Use compact units, fixed-width numeric rendering, a lighter menu font, and tighter spacing to reduce menu bar width while avoiding icon jitter. (#122, #127, #137)</li>
+      <li><strong>Enhanced Mode Disable Restores Manual Proxy Selection</strong> — Reapply remembered proxy-group selections after returning to the built-in core, so selector groups no longer fall back to defaults such as Auto Select. (#134)</li>
+      <li><strong>Turn Off All Proxy Modes Is Localized</strong> — Localize the shortcut and tooltip across English, Simplified Chinese, Traditional Chinese, Japanese, and Russian.</li>
+      <li><strong>Profile Mixin Has Its Own Menu Visibility Toggle</strong> — Give Profile Mixin an independent Configs menu show/hide switch instead of sharing Config Editor visibility. (#129)</li>
+    </ul>
+    <hr />
+    <h3>新功能</h3>
+    <ul>
+      <li><strong>运行时 Profile Mixin</strong> — Config 菜单现在提供 Profile Mixin 编辑入口，对应 <code>~/.config/clashfx/.profile_mixin.yaml</code>；reload 和 Enhanced Mode 启动时会运行时叠加 mixin，不改写订阅原文件。(#129)</li>
+      <li><strong>一键关闭所有代理模式</strong> — 托盘菜单新增 Turn Off All Proxy Modes，可同时关闭 System Proxy 和 Enhanced Mode，并提供菜单显示开关。(#130)</li>
+      <li><strong>Enhanced Mode 可直接使用自定义配置</strong> — Advanced TUN Settings 新增 Use Custom Config as-is 开关，可直接使用当前选择 / 运行时配置启动，不再注入 ClashFX 生成的 TUN/DNS 设置。(#118)</li>
+    </ul>
+    <h3>修复</h3>
+    <ul>
+      <li><strong>菜单栏网速显示更紧凑且稳定</strong> — 使用更短的单位格式、固定宽度数字、更细的菜单字体和更紧凑的间距，减少菜单栏占用并避免图标跳动。(#122, #127, #137)</li>
+      <li><strong>关闭 Enhanced Mode 后会恢复手动选择的节点</strong> — 重载回内置 core 后会重新应用已记住的策略组节点选择，不再回到配置默认项（例如“自动选择”）。(#134)</li>
+      <li><strong>“关闭所有代理模式”已补齐多语言</strong> — 快捷项和 tooltip 已补齐英文、简体中文、繁体中文、日文、俄文文案。</li>
+      <li><strong>Profile Mixin 现在有独立的菜单显示开关</strong> — Profile Mixin 在 Configs 分组下提供独立显示 / 隐藏按钮，不再复用 Config Editor 的显示设置。(#129)</li>
+    </ul>
+  ]]></description>
+  <pubDate>Fri, 26 Jun 2026 06:14:20 +0000</pubDate>
+  <sparkle:version>1001005000</sparkle:version>
+  <sparkle:shortVersionString>1.1.5</sparkle:shortVersionString>
+            <sparkle:minimumSystemVersion>10.14</sparkle:minimumSystemVersion>
+  <enclosure
+    url="https://github.com/Clash-FX/ClashFX/releases/download/1.1.5/ClashFX.dmg"
+    sparkle:version="1001005000"
+    sparkle:shortVersionString="1.1.5"
+    sparkle:edSignature="bmcVYk6E6Cri58EoxQ6SKik1E5yJRrAXMqzZgRsRPFtoAT/guEBytYX6V490l2/V8PZCP/sFbmJjCvgdI1sCCA=="
+    length="96251893"
+    type="application/x-apple-diskimage"
+  />
+</item>
+    <item>
+  <title>Version 1.1.4.6 (Lab)</title>
+  <description><![CDATA[
+    <h2>ClashFX v1.1.4.6 (Lab)</h2><ul><li><strong>Menu Bar Speed Text Looks More Balanced</strong> — The menu bar upload/download speed now uses the macOS monospaced-digit menu font, uppercase units, and a space between the number and unit, so labels like `186 B/S` and `1.2 KB/S` no longer look cramped or visually mismatched.</li><li><strong>Turn Off All Proxy Modes Is Localized</strong> — The tray-menu shortcut for disabling System Proxy and Enhanced Mode now has localized text and tooltip strings across English, Simplified Chinese, Traditional Chinese, Japanese, and Russian instead of falling back to English in non-English menus.</li></ul>
+  ]]></description>
+  <pubDate>Mon, 22 Jun 2026 08:24:46 +0000</pubDate>
+  <sparkle:version>1001004006</sparkle:version>
+  <sparkle:shortVersionString>1.1.4.6</sparkle:shortVersionString>
+            <sparkle:channel>lab</sparkle:channel>
+          <sparkle:minimumSystemVersion>10.14</sparkle:minimumSystemVersion>
+  <enclosure
+    url="https://github.com/Clash-FX/ClashFX/releases/download/1.1.4.6/ClashFX.dmg"
+    sparkle:version="1001004006"
+    sparkle:shortVersionString="1.1.4.6"
+    sparkle:edSignature="zYZEMu5yU4dor0+VSfnun6wRXgZ02sKOiJjnjAtwt95cQHxBhJE4bSYcdTJjzr/ID8nF5zaZ6w0cJPQFJAjyAg=="
+    length="96315257"
+    type="application/x-apple-diskimage"
+  />
+</item>
+    <item>
+  <title>Version 1.1.4.5 (Lab)</title>
+  <description><![CDATA[
+    <h2>ClashFX v1.1.4.5 (Lab)</h2><ul><li><strong>Enhanced Mode Disable Restores Manual Proxy Selection</strong> — Turning Enhanced Mode off now reapplies ClashFX's remembered proxy-group selections after the built-in core reloads, so selector groups no longer fall back to the config default such as Auto Select. (#134)</li></ul>
+  ]]></description>
+  <pubDate>Mon, 22 Jun 2026 07:03:43 +0000</pubDate>
+  <sparkle:version>1001004005</sparkle:version>
+  <sparkle:shortVersionString>1.1.4.5</sparkle:shortVersionString>
+            <sparkle:channel>lab</sparkle:channel>
+          <sparkle:minimumSystemVersion>10.14</sparkle:minimumSystemVersion>
+  <enclosure
+    url="https://github.com/Clash-FX/ClashFX/releases/download/1.1.4.5/ClashFX.dmg"
+    sparkle:version="1001004005"
+    sparkle:shortVersionString="1.1.4.5"
+    sparkle:edSignature="zyi7A9eBgWJOZV2rUlpqUA1fS8iuqDs/2WMNzD8yYtE7Ge3KczqXQFrKzNRISOQ//dHDZ0zdfTVbGjLDD6avAA=="
+    length="96325369"
+    type="application/x-apple-diskimage"
+  />
+</item>
+    <item>
   <title>Version 1.1.4.4 (Lab)</title>
   <description><![CDATA[
     <h2>ClashFX v1.1.4.4 (Lab)</h2><ul><li><strong>Profile Mixin for Runtime Configs</strong> — The Config menu now includes a Profile Mixin editor backed by `~/.config/clashfx/.profile_mixin.yaml`. ClashFX applies that mixin at runtime for reloads and Enhanced Mode without rewriting subscription files, so custom proxy groups/rules can survive profile updates. (#129)</li><li><strong>Turn Off All Proxy Modes</strong> — A new tray menu action can disable both System Proxy and Enhanced Mode at once, with a tray-menu visibility setting so users can show or hide the shortcut. (#130)</li><li><strong>Use Custom Enhanced Mode Config As-Is</strong> — Advanced TUN Settings now has an opt-in switch that starts Enhanced Mode from the selected/runtime config without injecting ClashFX's generated TUN/DNS settings. Users who maintain their own complete `tun`, fake-IP DNS, `external-controller`, and `allow-lan` config can run it directly. (#118)</li><li><strong>Profile Mixin Has Its Own Tray Menu Visibility Toggle</strong> — The new Profile Mixin menu item now has an independent show/hide switch under Configs instead of sharing the Config Editor visibility setting. (#129)</li><li><strong>Menu Bar Speed Display Is More Compact and Stable</strong> — The menu bar upload/download speed now uses a short formatter and fixed-width numeric rendering, reducing wasted menu bar space while preventing nearby icons from jumping as speeds change. (#122, #127)</li></ul>

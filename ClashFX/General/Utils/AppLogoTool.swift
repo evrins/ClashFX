@@ -116,6 +116,7 @@ enum AppLogoTool {
         }
         NSWorkspace.shared.noteFileSystemChanged(bundlePath)
         refreshIconAppearanceCache()
+        NotificationCenter.default.post(name: .appLogoDidChange, object: nil)
         return didSetIcon
     }
 

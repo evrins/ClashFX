@@ -10,7 +10,7 @@
 import AppKit
 
 class SpeedTextView: NSView {
-    private static let fixedWidthSample = "999M/s"
+    private static let fixedWidthSample = "999KB/s"
 
     private var upSpeed: String = "0B/s"
     private var downSpeed: String = "0B/s"

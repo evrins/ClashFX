@@ -452,7 +452,9 @@
 "Reload Config" = "Перезагрузить конфигурацию";
 
 /* No comment provided by engineer. */
-"Update External Resources" = "Обновить внешние ресурсы";
+"Update Rule and Proxy Resources" = "Обновить правила и ресурсы прокси";
+
+"Config Patch (Profile Mixin)" = "Патч конфигурации (Profile Mixin)";
 
 /* No comment provided by engineer. */
 "Remote Config" = "Удалённая конфигурация";
@@ -480,6 +482,11 @@
 
 /* No comment provided by engineer. */
 "Show Net Speed" = "Показать скорость сети";
+
+"Show Proxy Speed" = "Показывать скорость прокси ClashFX";
+"Shows traffic that passes through ClashFX's local proxy or Enhanced Mode, not total system traffic." = "Показывает только трафик через локальный прокси ClashFX или расширенный режим, а не общую скорость сети системы.";
+"Hide Dock Icon" = "Скрывать значок в Dock";
+"When enabled, ClashFX is available only from the menu bar." = "После включения ClashFX будет доступен только через значок в строке меню.";
 
 /* No comment provided by engineer. */
 "Allow from LAN" = "Разрешить из локальной сети";
@@ -554,8 +561,23 @@
 "Open Download Page" = "Открыть страницу загрузки";
 "Local development build" = "Локальная сборка для разработки";
 
+/* Turn Off All Proxy Modes */
+"Turn Off All Proxy Modes" = "Отключить все режимы прокси";
+"Disable System Proxy and Enhanced Mode together" = "Отключить системный прокси и Enhanced Mode вместе";
+
 /* Bypass Common Chinese Apps */
 "Bypass Common Chinese Apps" = "Обход популярных китайских приложений";
 
 /* Requires Enhanced Mode (uses PROCESS-NAME rules) */
 "Requires Enhanced Mode (uses PROCESS-NAME rules)" = "Требуется режим Enhanced (используются правила PROCESS-NAME)";
+
+/* Settings sidebar */
+"Settings" = "Настройки";
+"Global Shortcut" = "Сочетания";
+"Debug" = "Отладка";
+"Application Settings" = "Настройки приложения";
+"Network Automation" = "Автоматизация сети";
+"Connectivity Test" = "Проверка подключения";
+"Bypass Rules" = "Правила обхода";
+"Global Shortcut Updated" = "Глобальные сочетания обновлены";
+"Copy shortcuts were changed to avoid intercepting Command-C. You can customize them in Settings > Global Shortcut." = "Сочетания для копирования изменены, чтобы не перехватывать Command-C. Их можно настроить в «Настройки > Глобальные сочетания».";

@@ -7,17 +7,37 @@
 //
 import AppKit
 
+enum DockIconVisibility {
+    private static var hasManagedWindows = false
+
+    static func updateManagedWindowPresence(_ hasWindows: Bool) {
+        hasManagedWindows = hasWindows
+        refresh()
+        if !hasWindows {
+            DispatchQueue.main.async {
+                refresh()
+            }
+        }
+    }
+
+    static func refresh(windowWillBeVisible: Bool = false) {
+        guard !Settings.hideDockIcon else {
+            NSApp.setActivationPolicy(.accessory)
+            return
+        }
+
+        let hasVisibleWindow = windowWillBeVisible || hasManagedWindows || NSApp.windows.contains {
+            $0.isVisible && !$0.isKind(of: NSPanel.self) && $0.styleMask.contains(.titled)
+        }
+        NSApp.setActivationPolicy(hasVisibleWindow ? .regular : .accessory)
+    }
+}
+
 private class ClashWindowsRecorder {
     static let shared = ClashWindowsRecorder()
     var windowControllers = [NSWindowController]() {
         didSet {
-            if windowControllers.isEmpty {
-                NSApp.setActivationPolicy(.accessory)
-            } else {
-                if NSApp.activationPolicy() == .accessory {
-                    NSApp.setActivationPolicy(.regular)
-                }
-            }
+            DockIconVisibility.updateManagedWindowPresence(!windowControllers.isEmpty)
         }
     }
 }
@@ -25,6 +45,10 @@ private class ClashWindowsRecorder {
 class ClashWindowController<T: NSViewController>: NSWindowController, NSWindowDelegate {
     var onWindowClose: (() -> Void)?
     private var fromCache = false
+    private var shouldPersistWindowSize: Bool {
+        !(T.self == SettingsSidebarViewController.self)
+    }
+
     private var lastSize: CGSize? {
         get {
             if let str = UserDefaults.standard.value(forKey: "lastSize.\(T.className())") as? String {
@@ -65,7 +89,7 @@ class ClashWindowController<T: NSViewController>: NSWindowController, NSWindowDe
     override func showWindow(_ sender: Any?) {
         super.showWindow(sender)
         NSApp.activate(ignoringOtherApps: true)
-        if !fromCache, let lastSize = lastSize, lastSize != .zero {
+        if shouldPersistWindowSize, !fromCache, let lastSize = lastSize, lastSize != .zero {
             window?.setContentSize(lastSize)
             window?.center()
         }
@@ -79,7 +103,7 @@ class ClashWindowController<T: NSViewController>: NSWindowController, NSWindowDe
         ClashWindowsRecorder.shared.windowControllers.removeAll(where: { $0 == self })
         onWindowClose?()
         if let win = window {
-            if !win.styleMask.contains(.fullScreen) {
+            if shouldPersistWindowSize, !win.styleMask.contains(.fullScreen) {
                 lastSize = win.frame.size
             }
         }

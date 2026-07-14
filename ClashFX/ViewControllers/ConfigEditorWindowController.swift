@@ -11,20 +11,22 @@ class ConfigEditorWindowController: NSWindowController {
     private var visualContainer: NSView!
     private var configDocument: ConfigDocument?
     private var isVisualMode = false
+    private var windowKey = ""
 
-    private static var current: ConfigEditorWindowController?
+    private static var openWindows: [String: ConfigEditorWindowController] = [:]
+    private static let currentConfigWindowKey = "__current_config__"
+    private static let profileMixinTitle = NSLocalizedString("Config Patch (Profile Mixin)", comment: "")
 
     static func show(configPath: String? = nil) {
-        if let existing = current, existing.window?.isVisible == true {
-            if let path = configPath {
-                existing.loadFile(path: path)
-            }
+        let key = configPath ?? currentConfigWindowKey
+        if let existing = openWindows[key], existing.window?.isVisible == true {
             existing.window?.makeKeyAndOrderFront(nil)
             NSApp.activate(ignoringOtherApps: true)
             return
         }
         let controller = ConfigEditorWindowController()
-        current = controller
+        controller.windowKey = key
+        openWindows[key] = controller
         controller.showWindow(nil)
         if let path = configPath {
             controller.loadFile(path: path)
@@ -46,10 +48,9 @@ class ConfigEditorWindowController: NSWindowController {
         window.center()
         window.minSize = NSSize(width: 750, height: 450)
         super.init(window: window)
-        // Show app in Dock when editor is open so user can find it easily
         window.delegate = self
         setupUI()
-        NSApp.setActivationPolicy(.regular)
+        DockIconVisibility.refresh(windowWillBeVisible: true)
     }
 
     @available(*, unavailable)
@@ -212,6 +213,7 @@ class ConfigEditorWindowController: NSWindowController {
     private func ensureVisualEditor() {
         guard visualEditorVC == nil else { return }
         let vc = VisualConfigEditorController()
+        vc.allowsProfileRuleBuckets = isProfileMixinPath(filePath)
         visualEditorVC = vc
         let vcView = vc.view
         vcView.translatesAutoresizingMaskIntoConstraints = false
@@ -239,6 +241,7 @@ class ConfigEditorWindowController: NSWindowController {
             let doc = try ConfigDocument.loadFromYAML(textView.string)
             configDocument = doc
             ensureVisualEditor()
+            visualEditorVC?.allowsProfileRuleBuckets = isProfileMixinPath(filePath)
             visualEditorVC?.loadDocument(doc)
             scrollView.isHidden = true
             visualContainer.isHidden = false
@@ -270,18 +273,42 @@ class ConfigEditorWindowController: NSWindowController {
     // MARK: - File Operations
 
     private func populateFileList() {
-        filePopup.removeAllItems()
-        let configs = ConfigManager.getConfigFilesList()
-        for name in configs {
-            filePopup.addItem(withTitle: name)
+        let applyConfigs: ([String]) -> Void = { [weak self] configs in
+            guard let self = self else { return }
+            self.filePopup.removeAllItems()
+            for name in configs {
+                self.filePopup.addItem(withTitle: name)
+            }
+            self.filePopup.addItem(withTitle: Self.profileMixinTitle)
+            self.selectFilePopupItemForCurrentFile()
+        }
+
+        if ICloudManager.shared.useiCloud.value {
+            ICloudManager.shared.getConfigFilesList(configs: applyConfigs)
+        } else {
+            applyConfigs(ConfigManager.getConfigFilesList())
+        }
+    }
+
+    private func selectFilePopupItemForCurrentFile() {
+        guard filePopup.numberOfItems > 0 else { return }
+        if isProfileMixinPath(filePath) {
+            filePopup.selectItem(withTitle: Self.profileMixinTitle)
+            return
+        }
+        if !filePath.isEmpty {
+            let fileName = (filePath as NSString).lastPathComponent
+            filePopup.selectItem(withTitle: (fileName as NSString).deletingPathExtension)
+            return
         }
         filePopup.selectItem(withTitle: ConfigManager.selectConfigName)
     }
 
     private func loadCurrentConfig() {
         let name = ConfigManager.selectConfigName
-        let path = Paths.localConfigPath(for: name)
-        loadFile(path: path)
+        ConfigManager.getConfigPath(configName: name) { [weak self] path in
+            self?.loadFile(path: path)
+        }
     }
 
     func loadFile(path: String) {
@@ -302,6 +329,7 @@ class ConfigEditorWindowController: NSWindowController {
 
             let fileName = (path as NSString).lastPathComponent
             window?.title = "ClashFX Config Editor — \(fileName)"
+            selectFilePopupItemForCurrentFile()
             let lineCount = content.components(separatedBy: "\n").count
             statusLabel.stringValue = "\(lineCount) lines"
 
@@ -319,6 +347,7 @@ class ConfigEditorWindowController: NSWindowController {
                 if let doc = try? ConfigDocument.loadFromYAML(content) {
                     configDocument = doc
                     ensureVisualEditor()
+                    visualEditorVC?.allowsProfileRuleBuckets = isProfileMixinPath(path)
                     visualEditorVC?.loadDocument(doc)
                 }
             }
@@ -330,7 +359,20 @@ class ConfigEditorWindowController: NSWindowController {
 
     @objc private func fileSelectionChanged(_ sender: NSPopUpButton) {
         guard let name = sender.selectedItem?.title else { return }
-        let path = Paths.localConfigPath(for: name)
+        if name == Self.profileMixinTitle {
+            loadProfileMixinFile()
+            return
+        }
+        ConfigManager.getConfigPath(configName: name) { [weak self] path in
+            self?.loadFile(path: path)
+        }
+    }
+
+    private func loadProfileMixinFile() {
+        let path = Paths.profileMixinPath
+        if !FileManager.default.fileExists(atPath: path) {
+            try? "# Profile Mixin is merged into the selected profile at runtime.\n".write(toFile: path, atomically: true, encoding: .utf8)
+        }
         loadFile(path: path)
     }
 
@@ -362,8 +404,16 @@ class ConfigEditorWindowController: NSWindowController {
 
     @objc private func saveAndReload() {
         saveFile()
-        let configName = filePopup.selectedItem?.title ?? ConfigManager.selectConfigName
+        let configName = isProfileMixinPath(filePath) ? ConfigManager.selectConfigName : (filePopup.selectedItem?.title ?? ConfigManager.selectConfigName)
         AppDelegate.shared.updateConfig(configName: configName)
+    }
+
+    private func isProfileMixinPath(_ path: String) -> Bool {
+        let standardizedPath = (path as NSString).standardizingPath
+        let localPath = (kProfileMixinFilePath as NSString).standardizingPath
+        let activePath = (Paths.profileMixinPath as NSString).standardizingPath
+        let fileName = (path as NSString).lastPathComponent
+        return standardizedPath == localPath || standardizedPath == activePath || Paths.isProfileMixinFileName(fileName)
     }
 
     // MARK: - YAML Syntax Highlighting
@@ -507,16 +557,10 @@ extension ConfigEditorWindowController: NSTextViewDelegate {
 
 extension ConfigEditorWindowController: NSWindowDelegate {
     func windowWillClose(_ notification: Notification) {
-        ConfigEditorWindowController.current = nil
-        // Hide from Dock when no editor windows are open
-        // (check if other key windows exist first)
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-            let hasVisibleWindows = NSApp.windows.contains {
-                $0.isVisible && !$0.isKind(of: NSPanel.self) && $0.styleMask.contains(.titled)
-            }
-            if !hasVisibleWindows {
-                NSApp.setActivationPolicy(.accessory)
-            }
+        ConfigEditorWindowController.openWindows[windowKey] = nil
+        DockIconVisibility.refresh()
+        DispatchQueue.main.async {
+            DockIconVisibility.refresh()
         }
     }
 }

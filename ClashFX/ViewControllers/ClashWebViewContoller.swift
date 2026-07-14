@@ -102,6 +102,30 @@ class ClashWebViewContoller: NSViewController {
     })();
     """
 
+    private static func metaCubeXDConfigJS(port: String, secret: String) -> String {
+        let backendURL = "http://127.0.0.1:\(port)"
+        let escapedBackendURL = backendURL.replacingOccurrences(of: "\\", with: "\\\\").replacingOccurrences(of: "'", with: "\\'")
+        let escapedSecret = secret.replacingOccurrences(of: "\\", with: "\\\\").replacingOccurrences(of: "'", with: "\\'")
+        return """
+        window.__METACUBEXD_CONFIG__ = {
+          defaultBackendURL: '\(escapedBackendURL)',
+          defaultBackendSecret: '\(escapedSecret)'
+        };
+        """
+    }
+
+    private static func metaCubeXDSetupURL(port: String, secret: String) -> URL? {
+        var allowed = CharacterSet.urlQueryAllowed
+        allowed.remove(charactersIn: "&=+")
+
+        var setupURL = "http://127.0.0.1:\(port)/ui/#/setup?hostname=127.0.0.1&port=\(port)&http=true"
+        if !secret.isEmpty {
+            let escapedSecret = secret.addingPercentEncoding(withAllowedCharacters: allowed) ?? secret
+            setupURL += "&secret=\(escapedSecret)"
+        }
+        return URL(string: setupURL)
+    }
+
     override func loadView() {
         view = NSView(frame: NSRect(origin: .zero, size: minSize))
     }
@@ -116,25 +140,14 @@ class ClashWebViewContoller: NSViewController {
         if #available(macOS 13.3, *) {
             webview.isInspectable = true
         }
-        webview.setValue(false, forKey: "drawsBackground")
-
-        let layoutPatchJS = """
-        (function() {
-          var s = document.createElement('style');
-          s.textContent = [
-            'aside, [class*="aside"], [class*="sidebar"], [class*="Sidebar"] { padding-top: 28px !important; }',
-            '[class*="_p5j7u"] { height: 28px !important; min-height: 0 !important; overflow: hidden !important; }'
-          ].join(' ');
-          if (document.head) document.head.appendChild(s);
-          else document.addEventListener('DOMContentLoaded', function() { document.head.appendChild(s); });
-        })();
-        """
+        let port = ConfigManager.shared.apiPort
+        let secret = ConfigManager.shared.overrideSecret ?? ConfigManager.shared.apiSecret
+        let metaCubeXDConfigScript = WKUserScript(source: Self.metaCubeXDConfigJS(port: port, secret: secret), injectionTime: .atDocumentStart, forMainFrameOnly: true)
         let guardScript = WKUserScript(source: Self.apiGuardJS, injectionTime: .atDocumentStart, forMainFrameOnly: true)
         let hideScript = WKUserScript(source: Self.hideUpgradeJS, injectionTime: .atDocumentEnd, forMainFrameOnly: true)
-        let padScript = WKUserScript(source: layoutPatchJS, injectionTime: .atDocumentEnd, forMainFrameOnly: true)
+        webview.configuration.userContentController.addUserScript(metaCubeXDConfigScript)
         webview.configuration.userContentController.addUserScript(guardScript)
         webview.configuration.userContentController.addUserScript(hideScript)
-        webview.configuration.userContentController.addUserScript(padScript)
 
         bridge = JsBridgeUtil.initJSbridge(webview: webview, delegate: self)
 
@@ -150,18 +163,26 @@ class ClashWebViewContoller: NSViewController {
 
     override func viewWillAppear() {
         super.viewWillAppear()
-        view.window?.titleVisibility = .hidden
-        view.window?.titlebarAppearsTransparent = true
-        view.window?.styleMask.insert(.fullSizeContentView)
+        configureWindowAppearance()
+    }
 
-        view.window?.isOpaque = false
-        view.window?.backgroundColor = NSColor.clear
-        view.window?.toolbar = NSToolbar()
-        view.window?.toolbar?.showsBaselineSeparator = false
+    override func viewDidAppear() {
+        super.viewDidAppear()
+        configureWindowAppearance()
+    }
+
+    private func configureWindowAppearance() {
+        guard let window = view.window else { return }
+        window.titleVisibility = .hidden
+        window.titlebarAppearsTransparent = false
+        window.styleMask.remove(.fullSizeContentView)
+        window.toolbar = nil
+        window.isOpaque = true
+        window.backgroundColor = NSColor.windowBackgroundColor
+        window.minSize = minSize
+
         view.wantsLayer = true
-        view.layer?.cornerRadius = 10
-
-        view.window?.minSize = minSize
+        view.layer?.cornerRadius = 0
     }
 
     func setupView() {
@@ -176,7 +197,11 @@ class ClashWebViewContoller: NSViewController {
     }
 
     func loadWebRecourses() {
-        WKWebsiteDataStore.default().removeData(ofTypes: [WKWebsiteDataTypeDiskCache, WKWebsiteDataTypeMemoryCache], modifiedSince: Date(timeIntervalSince1970: 0), completionHandler: {})
+        WKWebsiteDataStore.default().removeData(
+            ofTypes: WKWebsiteDataStore.allWebsiteDataTypes(),
+            modifiedSince: Date(timeIntervalSince1970: 0),
+            completionHandler: {}
+        )
         // defaults write com.clashfx.app webviewUrl "your url"
         if let userDefineUrl = UserDefaults.standard.string(forKey: "webviewUrl"), let url = URL(string: userDefineUrl) {
             Logger.log("get user define url: \(url)")
@@ -184,13 +209,9 @@ class ClashWebViewContoller: NSViewController {
             return
         }
         let port = ConfigManager.shared.apiPort
-        let secret = ConfigManager.shared.apiSecret
-        var defaultUrl = "http://127.0.0.1:\(port)/ui/#/setup?hostname=127.0.0.1&port=\(port)"
-        if !secret.isEmpty {
-            defaultUrl += "&secret=\(secret)"
-        }
-        if let url = URL(string: defaultUrl) {
-            Logger.log("dashboard url:\(defaultUrl)")
+        let secret = ConfigManager.shared.overrideSecret ?? ConfigManager.shared.apiSecret
+        if let url = Self.metaCubeXDSetupURL(port: port, secret: secret) {
+            Logger.log("dashboard url:http://127.0.0.1:\(port)/ui/#/setup")
             webview.load(URLRequest(url: url, cachePolicy: .reloadIgnoringLocalAndRemoteCacheData, timeoutInterval: 0))
             return
         }

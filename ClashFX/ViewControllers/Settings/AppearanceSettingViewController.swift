@@ -9,12 +9,16 @@ import Cocoa
 
 class AppearanceSettingViewController: NSViewController {
     private let trayMenuSettingViewHeight: CGFloat = 300
-    private let preferredViewportHeight: CGFloat = 720
+    private let preferredViewportHeight: CGFloat = 520
 
     override func loadView() {
         let width: CGFloat = 400
         let contentView = NSView(frame: NSRect(x: 0, y: 0, width: width, height: preferredViewportHeight))
-        contentView.translatesAutoresizingMaskIntoConstraints = false
+        contentView.autoresizingMask = [.width, .height]
+        contentView.setContentHuggingPriority(.defaultLow, for: .horizontal)
+        contentView.setContentHuggingPriority(.defaultLow, for: .vertical)
+        contentView.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
+        contentView.setContentCompressionResistancePriority(.defaultLow, for: .vertical)
 
         let scrollView = NSScrollView()
         scrollView.translatesAutoresizingMaskIntoConstraints = false
@@ -23,12 +27,16 @@ class AppearanceSettingViewController: NSViewController {
         scrollView.hasVerticalScroller = true
         scrollView.hasHorizontalScroller = false
         scrollView.autohidesScrollers = false
+        scrollView.setContentHuggingPriority(.defaultLow, for: .horizontal)
+        scrollView.setContentHuggingPriority(.defaultLow, for: .vertical)
+        scrollView.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
+        scrollView.setContentCompressionResistancePriority(.defaultLow, for: .vertical)
 
         let documentView = NSView()
         documentView.translatesAutoresizingMaskIntoConstraints = false
         scrollView.documentView = documentView
 
-        let trayBox = NSBox()
+        let trayBox = SettingsGroupBox()
         trayBox.translatesAutoresizingMaskIntoConstraints = false
         trayBox.title = NSLocalizedString("Tray Icon", comment: "")
 
@@ -44,7 +52,7 @@ class AppearanceSettingViewController: NSViewController {
             ])
         }
 
-        let logoBox = NSBox()
+        let logoBox = SettingsGroupBox()
         logoBox.translatesAutoresizingMaskIntoConstraints = false
         logoBox.title = NSLocalizedString("App Logo", comment: "")
 
@@ -60,7 +68,7 @@ class AppearanceSettingViewController: NSViewController {
             ])
         }
 
-        let menuBox = NSBox()
+        let menuBox = SettingsGroupBox()
         menuBox.translatesAutoresizingMaskIntoConstraints = false
         menuBox.title = NSLocalizedString("Tray Menu", comment: "")
 
@@ -97,11 +105,11 @@ class AppearanceSettingViewController: NSViewController {
             trayBox.leadingAnchor.constraint(equalTo: documentView.leadingAnchor, constant: 20),
             trayBox.trailingAnchor.constraint(equalTo: documentView.trailingAnchor, constant: -20),
 
-            logoBox.topAnchor.constraint(equalTo: trayBox.bottomAnchor, constant: 12),
+            logoBox.topAnchor.constraint(equalTo: trayBox.bottomAnchor, constant: 30),
             logoBox.leadingAnchor.constraint(equalTo: documentView.leadingAnchor, constant: 20),
             logoBox.trailingAnchor.constraint(equalTo: documentView.trailingAnchor, constant: -20),
 
-            menuBox.topAnchor.constraint(equalTo: logoBox.bottomAnchor, constant: 12),
+            menuBox.topAnchor.constraint(equalTo: logoBox.bottomAnchor, constant: 30),
             menuBox.leadingAnchor.constraint(equalTo: documentView.leadingAnchor, constant: 20),
             menuBox.trailingAnchor.constraint(equalTo: documentView.trailingAnchor, constant: -20),
 
@@ -110,6 +118,6 @@ class AppearanceSettingViewController: NSViewController {
 
         view = contentView
         title = NSLocalizedString("Appearance", comment: "")
-        preferredContentSize = NSSize(width: 420, height: preferredViewportHeight)
+        preferredContentSize = NSSize(width: 420, height: 520)
     }
 }

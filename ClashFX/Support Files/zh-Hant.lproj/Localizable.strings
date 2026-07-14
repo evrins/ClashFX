@@ -452,7 +452,9 @@
 "Reload Config" = "重載配置文件";
 
 /* No comment provided by engineer. */
-"Update External Resources" = "更新外部資源";
+"Update Rule and Proxy Resources" = "更新規則與代理資源";
+
+"Config Patch (Profile Mixin)" = "設定補丁（Profile Mixin）";
 
 /* No comment provided by engineer. */
 "Remote Config" = "託管配置";
@@ -477,6 +479,11 @@
 
 /* No comment provided by engineer. */
 "Show Net Speed" = "顯示即時速率";
+
+"Show Proxy Speed" = "顯示 ClashFX 代理速率";
+"Shows traffic that passes through ClashFX's local proxy or Enhanced Mode, not total system traffic." = "僅顯示經過 ClashFX 本地代理或增強模式的流量，不代表電腦整體網速。";
+"Hide Dock Icon" = "隱藏 Dock 圖示";
+"When enabled, ClashFX is available only from the menu bar." = "開啟後，只能透過狀態列圖示存取應用程式。";
 
 /* No comment provided by engineer. */
 "Allow from LAN" = "允許區域網路連線";
@@ -554,8 +561,23 @@
 "Open Download Page" = "開啟下載頁";
 "Local development build" = "本機開發版";
 
+/* Turn Off All Proxy Modes */
+"Turn Off All Proxy Modes" = "關閉所有代理模式";
+"Disable System Proxy and Enhanced Mode together" = "同時關閉系統代理和增強模式";
+
 /* Bypass Common Chinese Apps */
 "Bypass Common Chinese Apps" = "繞過常用國內應用";
 
 /* Requires Enhanced Mode (uses PROCESS-NAME rules) */
 "Requires Enhanced Mode (uses PROCESS-NAME rules)" = "需要先開啟增強模式（依賴 PROCESS-NAME 規則）";
+
+/* Settings sidebar */
+"Settings" = "設定";
+"Global Shortcut" = "全域快捷鍵";
+"Debug" = "偵錯";
+"Application Settings" = "應用程式設定";
+"Network Automation" = "網路自動化";
+"Connectivity Test" = "連線測試";
+"Bypass Rules" = "略過規則";
+"Global Shortcut Updated" = "全域快速鍵已更新";
+"Copy shortcuts were changed to avoid intercepting Command-C. You can customize them in Settings > Global Shortcut." = "複製快速鍵已調整，避免攔截 Command-C。可在「設定 > 全域快速鍵」中自訂。";

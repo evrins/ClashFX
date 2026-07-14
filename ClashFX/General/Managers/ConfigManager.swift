@@ -13,6 +13,8 @@ import RxSwift
 
 class ConfigManager {
     static let shared = ConfigManager()
+    private static let selectedLocalConfigNameKey = "selectedLocalConfigName"
+    private static let selectedICloudConfigNameKey = "selectedICloudConfigName"
     private let disposeBag = DisposeBag()
     var apiPort = "8080"
     var allowExternalControl = false
@@ -49,8 +51,21 @@ class ConfigManager {
         }
         set {
             UserDefaults.standard.set(newValue, forKey: "selectConfigName")
+            rememberConfigName(newValue, forICloudStorage: ICloudManager.shared.useiCloud.value)
             watchCurrentConfigFile()
         }
+    }
+
+    static func rememberedConfigName(forICloudStorage usesICloud: Bool) -> String? {
+        UserDefaults.standard.string(forKey: selectedConfigNameKey(forICloudStorage: usesICloud))
+    }
+
+    static func rememberConfigName(_ configName: String, forICloudStorage usesICloud: Bool) {
+        UserDefaults.standard.set(configName, forKey: selectedConfigNameKey(forICloudStorage: usesICloud))
+    }
+
+    private static func selectedConfigNameKey(forICloudStorage usesICloud: Bool) -> String {
+        usesICloud ? selectedICloudConfigNameKey : selectedLocalConfigNameKey
     }
 
     static func watchCurrentConfigFile() {
@@ -117,6 +132,27 @@ class ConfigManager {
         }
     }
 
+    /// Keeps the active config and remembered proxy selections in sync when a
+    /// remote subscription replaces its placeholder filename with the server name.
+    static func renameConfigReferences(from oldName: String, to newName: String) {
+        guard oldName != newName else { return }
+
+        if selectConfigName == oldName {
+            UserDefaults.standard.set(newName, forKey: "selectConfigName")
+        }
+
+        for usesICloud in [false, true] where rememberedConfigName(forICloudStorage: usesICloud) == oldName {
+            rememberConfigName(newName, forICloudStorage: usesICloud)
+        }
+
+        let renamedRecords = selectedProxyRecords.map { record in
+            guard record.config == oldName else { return record }
+            return SavedProxyModel(group: record.group, selected: record.selected, config: newName)
+        }
+        var recordKeys = Set<String>()
+        selectedProxyRecords = renamedRecords.filter { recordKeys.insert($0.key).inserted }
+    }
+
     static var selectOutBoundMode: ClashProxyMode {
         get {
             return ClashProxyMode(rawValue: UserDefaults.standard.string(forKey: "selectOutBoundMode") ?? "") ?? .rule
@@ -168,9 +204,18 @@ extension ConfigManager {
             return fileURLs
                 .filter { String($0.split(separator: ".").last ?? "") == "yaml" }
                 .filter { !$0.hasPrefix(".") }
+                .filter { !Paths.isProfileMixinFileName($0) }
                 .map { $0.split(separator: ".").dropLast().joined(separator: ".") }
         } catch {
             return ["config"]
+        }
+    }
+
+    static func getActiveConfigFilesList(complete: @escaping (([String]) -> Void)) {
+        if ICloudManager.shared.useiCloud.value {
+            ICloudManager.shared.getConfigFilesList(configs: complete)
+        } else {
+            complete(getConfigFilesList())
         }
     }
 }

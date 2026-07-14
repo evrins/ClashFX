@@ -452,7 +452,9 @@
 "Reload Config" = "設定を再読み込み";
 
 /* No comment provided by engineer. */
-"Update External Resources" = "外部リソースを更新";
+"Update Rule and Proxy Resources" = "ルールとプロキシのリソースを更新";
+
+"Config Patch (Profile Mixin)" = "設定パッチ（Profile Mixin）";
 
 /* No comment provided by engineer. */
 "Remote Config" = "リモート設定";
@@ -480,6 +482,11 @@
 
 /* No comment provided by engineer. */
 "Show Net Speed" = "ネット速度を表示";
+
+"Show Proxy Speed" = "ClashFX プロキシ速度を表示";
+"Shows traffic that passes through ClashFX's local proxy or Enhanced Mode, not total system traffic." = "ClashFX のローカルプロキシまたは拡張モードを経由した通信量のみを表示します。システム全体の通信速度ではありません。";
+"Hide Dock Icon" = "Dock アイコンを隠す";
+"When enabled, ClashFX is available only from the menu bar." = "有効にすると、ClashFX にはメニューバーアイコンからのみアクセスできます。";
 
 /* No comment provided by engineer. */
 "Allow from LAN" = "LAN からの接続を許可";
@@ -554,8 +561,23 @@
 "Open Download Page" = "ダウンロードページを開く";
 "Local development build" = "ローカル開発ビルド";
 
+/* Turn Off All Proxy Modes */
+"Turn Off All Proxy Modes" = "すべてのプロキシモードをオフ";
+"Disable System Proxy and Enhanced Mode together" = "システムプロキシと拡張モードを同時に無効化";
+
 /* Bypass Common Chinese Apps */
 "Bypass Common Chinese Apps" = "中国の主要アプリをバイパス";
 
 /* Requires Enhanced Mode (uses PROCESS-NAME rules) */
 "Requires Enhanced Mode (uses PROCESS-NAME rules)" = "拡張モードが必要です（PROCESS-NAME ルールを使用）";
+
+/* Settings sidebar */
+"Settings" = "設定";
+"Global Shortcut" = "ショートカット";
+"Debug" = "デバッグ";
+"Application Settings" = "アプリ設定";
+"Network Automation" = "ネットワーク自動化";
+"Connectivity Test" = "接続テスト";
+"Bypass Rules" = "バイパスルール";
+"Global Shortcut Updated" = "グローバルショートカットを更新しました";
+"Copy shortcuts were changed to avoid intercepting Command-C. You can customize them in Settings > Global Shortcut." = "Command-C を横取りしないよう、コピーのショートカットを変更しました。設定 > グローバルショートカットで変更できます。";

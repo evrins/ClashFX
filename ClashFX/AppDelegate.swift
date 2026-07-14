@@ -9,6 +9,7 @@
 import Alamofire
 import Cocoa
 import CocoaLumberjack
+import KeyboardShortcuts
 import LetsMove
 import RxCocoa
 import RxSwift
@@ -40,6 +41,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     @IBOutlet var separatorLineTop: NSMenuItem!
     @IBOutlet var sepatatorLineEndProxySelect: NSMenuItem!
     @IBOutlet var configSeparatorLine: NSMenuItem!
+    @IBOutlet var configRemoteResourcesSeparator: NSMenuItem!
     @IBOutlet var logLevelMenuItem: NSMenuItem!
     @IBOutlet var httpPortMenuItem: NSMenuItem!
     @IBOutlet var socksPortMenuItem: NSMenuItem!
@@ -98,8 +100,12 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     private var lastStreamResetTime: Date = .distantPast
     private var pendingStreamResetWork: DispatchWorkItem?
     private var pendingEnhancedModeRefreshWork: DispatchWorkItem?
+    private var pendingWakeRecoveryWork: DispatchWorkItem?
     private static let enhancedModeRestoreMaxAttempts = 12
     private static let enhancedModeRestoreRetryDelay: TimeInterval = 5
+    private static let wakeRecoveryDelay: TimeInterval = 3
+    private static let wakeRecoveryRetryDelay: TimeInterval = 2
+    private static let wakeRecoveryMaxAttempts = 3
     private static let runtimePatchedConfigPath = kConfigFolderPath + ".runtime_config.yaml"
 
     /// Short-circuits TerminalConfirmAction during self-relaunch so the old
@@ -160,6 +166,12 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         }
         AppVersionUtil.showUpgradeAlert()
         ICloudManager.shared.setup()
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(onICloudConfigStorageDidChange),
+            name: .iCloudConfigStorageDidChange,
+            object: nil
+        )
 
         if WebPortalManager.hasWebProtal {
             WebPortalManager.shared.addWebProtalMenuItem(&statusMenu)
@@ -262,10 +274,12 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows flag: Bool) -> Bool {
-        DispatchQueue.main.async { [weak self] in
-            self?.statusItem?.button?.performClick(nil)
+        if flag {
+            sender.windows
+                .filter(\.isVisible)
+                .forEach { $0.makeKeyAndOrderFront(nil) }
         }
-        return true
+        return false
     }
 
     func checkMenuIconVisable() {
@@ -307,6 +321,8 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     func setupStatusMenuItemData() {
+        showNetSpeedIndicatorMenuItem.title = NSLocalizedString("Show Proxy Speed", comment: "")
+        updateExternalResourceMenuItem.title = NSLocalizedString("Update Rule and Proxy Resources", comment: "")
         ConfigManager.shared
             .showNetSpeedIndicatorObservable
             .bind { [weak self] show in
@@ -318,11 +334,32 @@ class AppDelegate: NSObject, NSApplicationDelegate {
                 self.statusItemView.updateSize(width: statusItemLength)
             }.disposed(by: disposeBag)
 
+        let speedToolTip = NSLocalizedString(
+            "Shows traffic that passes through ClashFX's local proxy or Enhanced Mode, not total system traffic.",
+            comment: ""
+        )
+        statusItem.button?.toolTip = speedToolTip
+        statusItemView.updateSpeedToolTip(speedToolTip)
+
         refreshStatusItemViewStatus()
         enhancedModeMenuItem.state = Settings.enhancedMode ? .on : .off
         bypassChineseAppsMenuItem?.state = Settings.bypassChineseApps ? .on : .off
+        setupMenuShortcutDisplay()
         installSubscriptionStatusMenuItemIfNeeded()
         refreshSubscriptionStatusMenuItem()
+    }
+
+    private func setupMenuShortcutDisplay() {
+        proxySettingMenuItem.setShortcut(for: .toggleSystemProxyMode)
+        copyExportCommandMenuItem.setShortcut(for: .copyShellCommand)
+        copyExportCommandExternalMenuItem.setShortcut(for: .copyExternalShellCommand)
+        proxyModeDirectMenuItem.setShortcut(for: .modeDirect)
+        proxyModeRuleMenuItem.setShortcut(for: .modeRule)
+        proxyModeGlobalMenuItem.setShortcut(for: .modeGlobal)
+        enhancedModeMenuItem.setShortcut(for: .toggleEnhancedMode)
+        showLogMenuItem.setShortcut(for: .log)
+        dashboardMenuItem.setShortcut(for: .dashboard)
+        connectionsMenuItem.setShortcut(for: .nativeDashboard)
     }
 
     private func refreshStatusItemViewStatus(systemProxyActive: Bool? = nil) {
@@ -634,6 +671,40 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         }
     }
 
+    @objc private func onICloudConfigStorageDidChange() {
+        ConfigManager.getActiveConfigFilesList { [weak self] configNames in
+            guard let self = self else { return }
+
+            self.updateConfigFiles()
+
+            guard !configNames.isEmpty else {
+                Logger.log("[iCloud] No configs available after changing storage", level: .warning)
+                return
+            }
+
+            let usesICloud = ICloudManager.shared.useiCloud.value
+            let selectedConfig = ConfigManager.selectConfigName
+            let rememberedConfig = ConfigManager.rememberedConfigName(forICloudStorage: usesICloud)
+            let configToLoad: String
+            if let rememberedConfig, configNames.contains(rememberedConfig) {
+                configToLoad = rememberedConfig
+            } else if let firstUserConfig = configNames.first(where: { $0 != "config" }) {
+                configToLoad = firstUserConfig
+            } else {
+                configToLoad = configNames[0]
+            }
+
+            if configToLoad != selectedConfig {
+                Logger.log("[iCloud] Selected config \(selectedConfig) is unavailable after changing storage; switching to \(configToLoad)")
+                ConfigManager.selectConfigName = configToLoad
+            } else {
+                ConfigManager.watchCurrentConfigFile()
+            }
+
+            self.updateConfig(configName: configToLoad, showNotification: false)
+        }
+    }
+
     func updateLoggingLevel() {
         ApiRequest.updateLogLevel(level: ConfigManager.selectLoggingApiLevel)
         for item in logLevelMenuItem.submenu?.items ?? [] {
@@ -850,7 +921,8 @@ class AppDelegate: NSObject, NSApplicationDelegate {
                 return nil
             }
 
-            var changed = applyProfileMixin(to: &root)
+            var changed = applyProfileRuleDirectives(in: &root)
+            changed = applyProfileMixin(to: &root) || changed
 
             if includeRulePatch && !Settings.enhancedMode {
                 let injectedRules = Settings.proxyIgnoreListAsRules()
@@ -893,16 +965,81 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         do {
             let yaml = try String(contentsOfFile: Paths.profileMixinPath, encoding: .utf8)
             guard !yaml.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { return false }
-            guard let mixin = try Yams.load(yaml: yaml) as? [String: Any] else {
+            guard var mixin = try Yams.load(yaml: yaml) as? [String: Any] else {
                 Logger.log("[Profile Mixin] YAML root is not a dictionary, skipping", level: .warning)
                 return false
             }
+            applyProfileRuleDirectives(from: &mixin, to: &root)
             root = mergeProfileMixin(mixin, into: root)
             Logger.log("[Profile Mixin] Applied \(Paths.profileMixinPath)")
             return true
         } catch {
             Logger.log("[Profile Mixin] Failed: \(error.localizedDescription)", level: .warning)
             return false
+        }
+    }
+
+    private func applyProfileRuleDirectives(in root: inout [String: Any]) -> Bool {
+        guard let ruleDirectives = takeProfileRuleDirectives(from: &root) else { return false }
+
+        logProfileProcessRuleWarningIfNeeded(ruleDirectives.prepend + ruleDirectives.append)
+        let existingRules = profileMixinRules(from: root["rules"])
+        root["rules"] = mergeUniqueRules(ruleDirectives.prepend + existingRules + ruleDirectives.append)
+        return true
+    }
+
+    private func applyProfileRuleDirectives(from mixin: inout [String: Any], to root: inout [String: Any]) {
+        guard let ruleDirectives = takeProfileRuleDirectives(from: &mixin) else { return }
+
+        logProfileProcessRuleWarningIfNeeded(ruleDirectives.prepend + ruleDirectives.append)
+        let existingRules = profileMixinRules(from: root["rules"])
+        root["rules"] = mergeUniqueRules(ruleDirectives.prepend + existingRules + ruleDirectives.append)
+    }
+
+    private func takeProfileRuleDirectives(from root: inout [String: Any]) -> (prepend: [String], append: [String])? {
+        guard var profile = root["profile"] as? [String: Any] else { return nil }
+
+        let prependRules = profileMixinRules(from: profile.removeValue(forKey: "prepend-rules"))
+        let appendRules = profileMixinRules(from: profile.removeValue(forKey: "append-rules"))
+        guard !prependRules.isEmpty || !appendRules.isEmpty else { return nil }
+
+        if profile.isEmpty {
+            root["profile"] = nil
+        } else {
+            root["profile"] = profile
+        }
+
+        return (prependRules, appendRules)
+    }
+
+    private func logProfileProcessRuleWarningIfNeeded(_ rules: [String]) {
+        guard !Settings.enhancedMode else { return }
+        let hasProcessRule = rules.contains { rule in
+            rule.hasPrefix("PROCESS-NAME,") || rule.hasPrefix("PROCESS-PATH,")
+        }
+        if hasProcessRule {
+            Logger.log("[Profile Rules] PROCESS-NAME and PROCESS-PATH rules require Enhanced Mode (TUN) to match reliably", level: .warning)
+        }
+    }
+
+    private func profileMixinRules(from value: Any?) -> [String] {
+        guard let value = value else { return [] }
+        if let rules = value as? [String] {
+            return rules
+        }
+        if let rules = value as? [Any] {
+            return rules.compactMap { $0 as? String }
+        }
+        Logger.log("[Profile Mixin] Rule directive is not a string array, skipping", level: .warning)
+        return []
+    }
+
+    private func mergeUniqueRules(_ rules: [String]) -> [String] {
+        var seen = Set<String>()
+        return rules.filter { rule in
+            guard !seen.contains(rule) else { return false }
+            seen.insert(rule)
+            return true
         }
     }
 
@@ -936,19 +1073,140 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     @objc func resetProxySettingOnWakeupFromSleep() {
+        Logger.log("Wake recovery: didWake received")
+
         if !ApiRequest.useDirectApi() {
             resetStreamApi()
         }
 
-        guard !ConfigManager.shared.isProxySetByOtherVariable.value,
-              ConfigManager.shared.proxyPortAutoSet else { return }
-        guard NetworkChangeNotifier.getPrimaryInterface() != nil else { return }
-        if !NetworkChangeNotifier.isCurrentSystemSetToClash() {
+        if ConfigManager.shared.isProxySetByOtherVariable.value {
+            Logger.log("Wake recovery: skip immediate system proxy restore because proxy is marked as changed by another process", level: .warning)
+        } else if !ConfigManager.shared.proxyPortAutoSet {
+            Logger.log("Wake recovery: skip immediate system proxy restore because System Proxy is off", level: .debug)
+        } else if NetworkChangeNotifier.getPrimaryInterface() == nil {
+            Logger.log("Wake recovery: primary interface is not ready yet", level: .warning)
+        } else if !NetworkChangeNotifier.isCurrentSystemSetToClash() {
             let rawProxy = NetworkChangeNotifier.getRawProxySetting()
-            Logger.log("Resting proxy setting, current:\(rawProxy)", level: .warning)
+            Logger.log("Wake recovery: restoring system proxy, current:\(rawProxy)", level: .warning)
+            SystemProxyManager.shared.disableProxy()
+            SystemProxyManager.shared.enableProxy()
+        } else {
+            Logger.log("Wake recovery: system proxy already points to ClashFX; scheduling core health check")
+        }
+
+        scheduleWakeRecovery()
+    }
+
+    private func scheduleWakeRecovery() {
+        pendingWakeRecoveryWork?.cancel()
+        let work = DispatchWorkItem { [weak self] in
+            self?.recoverProxyAfterWake(attemptsLeft: Self.wakeRecoveryMaxAttempts)
+        }
+        pendingWakeRecoveryWork = work
+        DispatchQueue.main.asyncAfter(deadline: .now() + Self.wakeRecoveryDelay, execute: work)
+    }
+
+    private func recoverProxyAfterWake(attemptsLeft: Int) {
+        guard NetworkChangeNotifier.getPrimaryInterface() != nil else {
+            guard attemptsLeft > 1 else {
+                Logger.log("Wake recovery: primary interface never became ready", level: .error)
+                return
+            }
+            Logger.log("Wake recovery: waiting for primary interface (\(attemptsLeft - 1) retries left)", level: .warning)
+            DispatchQueue.main.asyncAfter(deadline: .now() + Self.wakeRecoveryRetryDelay) { [weak self] in
+                self?.recoverProxyAfterWake(attemptsLeft: attemptsLeft - 1)
+            }
+            return
+        }
+
+        checkCoreHealthAfterWake { [weak self] healthy in
+            guard let self = self else { return }
+            if healthy {
+                Logger.log("Wake recovery: core API is healthy")
+                self.finishHealthyWakeRecovery()
+                return
+            }
+
+            Logger.log("Wake recovery: core API is not responding; restoring active proxy mode", level: .error)
+            self.restoreCoreAfterWake()
+        }
+    }
+
+    private func finishHealthyWakeRecovery() {
+        if ConfigManager.shared.proxyPortAutoSet,
+           !ConfigManager.shared.proxyShouldPaused.value,
+           !ConfigManager.shared.isProxySetByOtherVariable.value,
+           !NetworkChangeNotifier.isCurrentSystemSetToClash() {
+            let rawProxy = NetworkChangeNotifier.getRawProxySetting()
+            Logger.log("Wake recovery: core healthy but system proxy missing, current:\(rawProxy)", level: .warning)
             SystemProxyManager.shared.disableProxy()
             SystemProxyManager.shared.enableProxy()
         }
+
+        if ConfigManager.shared.isEnhancedModeActive {
+            verifyTunStatus(port: ConfigManager.shared.apiPort, secret: ConfigManager.shared.apiSecret)
+            overrideDNSForTun()
+        }
+
+        if !ApiRequest.useDirectApi() {
+            resetStreamApi()
+        }
+    }
+
+    private func restoreCoreAfterWake() {
+        if Settings.enhancedMode {
+            Logger.log("Wake recovery: restoring Enhanced Mode")
+            restoreEnhancedMode(attemptsLeft: 3)
+            return
+        }
+
+        if ConfigManager.shared.isEnhancedModeActive {
+            Logger.log("Wake recovery: Enhanced Mode active without persisted setting; restarting Enhanced Mode", level: .warning)
+            enableEnhancedMode { [weak self] error in
+                if let error = error {
+                    Logger.log("Wake recovery: Enhanced Mode restart failed: \(error)", level: .error)
+                    return
+                }
+                self?.scheduleEnhancedModePostToggleRefresh()
+            }
+            return
+        }
+
+        Logger.log("Wake recovery: restarting built-in core")
+        ConfigManager.shared.isRunning = false
+        updateConfig(showNotification: false) { [weak self] error in
+            if let error = error {
+                Logger.log("Wake recovery: built-in core restore failed: \(error)", level: .error)
+                return
+            }
+            if ConfigManager.shared.proxyPortAutoSet,
+               !ConfigManager.shared.proxyShouldPaused.value,
+               !ConfigManager.shared.isProxySetByOtherVariable.value {
+                SystemProxyManager.shared.enableProxy()
+            }
+            self?.resetStreamApi()
+        }
+    }
+
+    private func checkCoreHealthAfterWake(complete: @escaping (Bool) -> Void) {
+        guard let url = URL(string: ConfigManager.apiUrl.appending("/configs")) else {
+            complete(false)
+            return
+        }
+        var request = URLRequest(url: url, timeoutInterval: 2)
+        for header in ApiRequest.authHeader() {
+            request.setValue(header.value, forHTTPHeaderField: header.name)
+        }
+        URLSession.shared.dataTask(with: request) { _, response, error in
+            let statusCode = (response as? HTTPURLResponse)?.statusCode ?? -1
+            let healthy = statusCode == 200
+            if !healthy {
+                Logger.log("Wake recovery: /configs health failed status=\(statusCode), error=\(error?.localizedDescription ?? "none")", level: .warning)
+            }
+            DispatchQueue.main.async {
+                complete(healthy)
+            }
+        }.resume()
     }
 
     @objc func healthCheckOnNetworkChange() {
@@ -984,16 +1242,20 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
 extension AppDelegate {
     @IBAction func actionDashboard(_ sender: NSMenuItem?) {
-        ClashWindowController<ClashWebViewContoller>.create().showWindow(sender)
+        DispatchQueue.main.async {
+            ClashWindowController<ClashWebViewContoller>.create().showWindow(sender)
+        }
     }
 
     @IBAction func actionConnections(_ sender: NSMenuItem?) {
         if #available(macOS 10.15, *) {
-            ClashWindowController<DashboardViewController>.create().showWindow(sender)
+            DispatchQueue.main.async {
+                ClashWindowController<DashboardViewController>.create().showWindow(sender)
+            }
         }
     }
 
-    @IBAction func actionToggleEnhancedMode(_ sender: NSMenuItem) {
+    @IBAction func actionToggleEnhancedMode(_ sender: NSMenuItem?) {
         let newState = !Settings.enhancedMode
         guard ConfigManager.shared.isRunning else { return }
         enhancedModeMenuItem.isEnabled = false
@@ -1186,8 +1448,13 @@ extension AppDelegate {
     @objc func showAdvancedTunSettings(_ sender: Any?) {
         let alert = NSAlert()
         alert.messageText = NSLocalizedString("Advanced TUN Settings", comment: "")
+        let advancedTunInfo = "MTU 1500 matches the real internet path; 4064 is the macOS utun ceiling. " +
+            "Pinning Interface avoids the macOS sleep/wake auto-detect bug. " +
+            "Use Custom Config keeps your config file as-is; " +
+            "Enhanced Mode still verifies TUN and applies macOS DNS override. " +
+            "Toggle Enhanced Mode off then on to apply."
         alert.informativeText = NSLocalizedString(
-            "MTU 1500 matches the real internet path; 4064 is the macOS utun ceiling. Pinning Interface avoids the macOS sleep/wake auto-detect bug. Use Custom Config starts Enhanced Mode from your selected config without TUN/DNS injection. Toggle Enhanced Mode off then on to apply.",
+            advancedTunInfo,
             comment: ""
         )
         alert.addButton(withTitle: NSLocalizedString("Apply", comment: ""))
@@ -1218,7 +1485,7 @@ extension AppDelegate {
         )
         customConfigButton.state = Settings.enhancedModeUseCustomConfig ? .on : .off
         customConfigButton.toolTip = NSLocalizedString(
-            "Requires your config to define tun, fake-ip DNS, external-controller, and allow-lan correctly.",
+            "Requires your config to define tun, DNS hijack/fake-ip DNS, external-controller, and LAN binding correctly. ClashFX will still apply and restore macOS DNS while Enhanced Mode is on.",
             comment: ""
         )
 
@@ -1418,12 +1685,15 @@ extension AppDelegate {
                     if success {
                         clashResumeCallbacks()
                         if Settings.enhancedModeUseCustomConfig {
-                            Logger.log("Enhanced Mode started with custom config as-is")
+                            Logger.log("Enhanced Mode started with custom config as-is; applying TUN checks and system DNS override")
                         } else {
-                            self.verifyTunStatus(port: port, secret: secret)
-                            self.overrideDNSForTun()
+                            Logger.log("Enhanced Mode started with generated enhanced config")
                         }
-                        completion(nil)
+                        self.verifyTunStatus(port: port, secret: secret)
+                        self.overrideDNSForTun()
+                        self.restoreSelectedOutboundModeAfterCoreChange {
+                            completion(nil)
+                        }
                     } else if attemptsLeft > 0, !Settings.enhancedModeUseCustomConfig {
                         Logger.log("External core not ready, regenerating config and retrying (\(attemptsLeft) left)", level: .warning)
                         ConfigManager.shared.isEnhancedModeActive = false
@@ -1516,9 +1786,12 @@ extension AppDelegate {
                 return
             }
             let selectedConfig = ConfigManager.selectConfigName
-            self?.requestConfigUpdateApplyingRuntimePatch(configName: selectedConfig) { _ in
+            self?.requestConfigUpdateApplyingRuntimePatch(configName: selectedConfig) { [weak self] error in
                 clashResumeCallbacks()
-                completion(nil)
+                if error == nil {
+                    self?.selectProxyGroupWithMemory()
+                }
+                completion(error)
             }
         }
     }
@@ -1848,34 +2121,61 @@ extension AppDelegate {
     }
 
     @IBAction func actionSpeedTest(_ sender: Any) {
+        runSpeedTest(
+            benchmarkURL: Settings.benchMarkUrl,
+            timeout: 5000,
+            showNotifications: true
+        )
+    }
+
+    private func runSpeedTest(benchmarkURL: String,
+                              timeout: Int,
+                              showNotifications: Bool) {
         if isSpeedTesting {
-            NSUserNotificationCenter.default.postSpeedTestingNotice()
+            if showNotifications {
+                NSUserNotificationCenter.default.postSpeedTestingNotice()
+            }
             return
         }
-        NSUserNotificationCenter.default.postSpeedTestBeginNotice()
+        if showNotifications {
+            NSUserNotificationCenter.default.postSpeedTestBeginNotice()
+        }
 
         isSpeedTesting = true
 
         ApiRequest.getMergedProxyData { [weak self] resp in
+            guard let self = self else { return }
+            guard let resp = resp else {
+                self.finishSpeedTest(showNotifications: showNotifications)
+                return
+            }
+
             let group = DispatchGroup()
 
-            for (name, _) in resp?.enclosingProviderResp?.providers ?? [:] {
+            for (name, _) in resp.enclosingProviderResp?.providers ?? [:] {
                 group.enter()
                 ApiRequest.healthCheck(proxy: name) {
                     group.leave()
                 }
             }
 
-            for p in resp?.proxiesMap["GLOBAL"]?.all ?? [] {
+            for p in resp.proxiesMap["GLOBAL"]?.all ?? [] {
                 group.enter()
-                ApiRequest.getProxyDelay(proxyName: p) { _ in
+                ApiRequest.getProxyDelay(proxyName: p, benchmarkURL: benchmarkURL, timeout: timeout) { _ in
                     group.leave()
                 }
             }
             group.notify(queue: DispatchQueue.main) {
-                NSUserNotificationCenter.default.postSpeedTestFinishNotice()
-                self?.isSpeedTesting = false
+                self.finishSpeedTest(showNotifications: showNotifications)
             }
+        }
+    }
+
+    private func finishSpeedTest(showNotifications: Bool) {
+        isSpeedTesting = false
+        MenuItemFactory.refreshExistingMenuItems()
+        if showNotifications {
+            NSUserNotificationCenter.default.postSpeedTestFinishNotice()
         }
     }
 
@@ -1892,7 +2192,9 @@ extension AppDelegate {
     }
 
     @IBAction func actionMoreSetting(_ sender: Any) {
-        ClashWindowController<SettingTabViewController>.create().showWindow(sender)
+        DispatchQueue.main.async {
+            ClashWindowController<SettingsSidebarViewController>.create().showWindow(sender)
+        }
     }
 
     // MARK: - Language
@@ -2040,7 +2342,7 @@ extension AppDelegate {
     func setupProfileMixinMenuItem() {
         guard let configMenu = configSeparatorLine.menu else { return }
         let item = NSMenuItem(
-            title: NSLocalizedString("Profile Mixin", comment: ""),
+            title: NSLocalizedString("Config Patch (Profile Mixin)", comment: ""),
             action: #selector(actionOpenProfileMixinEditor(_:)),
             keyEquivalent: ""
         )
@@ -2068,6 +2370,15 @@ extension AppDelegate {
             #     type: url-test
             #     use:
             #       - ProviderName
+            #
+            # Rules can be inserted before or after the selected profile's rules:
+            # profile:
+            #   prepend-rules:
+            #     - "DOMAIN-SUFFIX,example.com,DIRECT"
+            #   append-rules:
+            #     - "MATCH,Proxy"
+            #
+            # PROCESS-NAME and PROCESS-PATH rules require Enhanced Mode (TUN).
 
             """
             try? template.write(toFile: Paths.profileMixinPath, atomically: true, encoding: .utf8)
@@ -2195,10 +2506,20 @@ extension AppDelegate {
     }
 
     func selectOutBoundModeWithMenory() {
-        ApiRequest.updateOutBoundMode(mode: ConfigManager.selectOutBoundMode) {
-            [weak self] _ in
-            ConnectionManager.closeAllConnection()
-            self?.syncConfig()
+        restoreSelectedOutboundModeAfterCoreChange()
+    }
+
+    private func restoreSelectedOutboundModeAfterCoreChange(completion: (() -> Void)? = nil) {
+        let mode = ConfigManager.selectOutBoundMode
+        ApiRequest.updateOutBoundMode(mode: mode) { [weak self] success in
+            if success {
+                Logger.log("Restored outbound mode after core change: \(mode.rawValue)")
+                ConnectionManager.closeAllConnection()
+                self?.syncConfig()
+            } else {
+                Logger.log("Failed to restore outbound mode after core change: \(mode.rawValue)", level: .warning)
+            }
+            completion?()
         }
     }
 
@@ -2411,6 +2732,14 @@ extension AppDelegate {
         updateExternalResourceMenuItem.isHidden = !(showConfigs && Settings.trayMenuShowUpdateExternal)
         remoteConfigMenuItem.isHidden = !(showConfigs && Settings.trayMenuShowRemoteConfig)
         remoteControllerMenuItem.isHidden = !(showConfigs && Settings.trayMenuShowRemoteController)
+
+        let hasCurrentConfigActions = Settings.trayMenuShowConfigEditor
+            || Settings.trayMenuShowProfileMixin
+            || Settings.trayMenuShowOpenConfigFolder
+            || Settings.trayMenuShowReloadConfig
+        let hasRemoteResourceActions = Settings.trayMenuShowUpdateExternal
+            || Settings.trayMenuShowRemoteConfig
+        configRemoteResourcesSeparator.isHidden = !(showConfigs && hasCurrentConfigActions && hasRemoteResourceActions)
 
         // Dynamic config switch items (at top of Configs submenu, before configSeparatorLine)
         applyConfigSwitcherVisibility(showConfigSwitcher: showConfigs && Settings.trayMenuShowConfigSwitcher)

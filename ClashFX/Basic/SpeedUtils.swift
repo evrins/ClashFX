@@ -9,7 +9,7 @@
 import Foundation
 
 enum SpeedUtils {
-    private static let menuBarSpeedUnits = ["B/s", "K/s", "M/s", "G/s", "T/s"]
+    private static let menuBarSpeedUnits = ["B/s", "KB/s", "MB/s", "GB/s", "TB/s"]
     private static let menuBarSpeedThreshold = 1000.0
     private static let menuBarSpeedScales = [
         1.0,
@@ -26,7 +26,7 @@ enum SpeedUtils {
     static func getMenuBarSpeedString(for byte: Int) -> String {
         let bytesPerSecond = max(byte, 0)
         if bytesPerSecond < Int(menuBarSpeedThreshold) {
-            return "\(bytesPerSecond)B/s"
+            return "\(bytesPerSecond)\(menuBarSpeedUnits[0])"
         }
 
         var unitIndex = 0

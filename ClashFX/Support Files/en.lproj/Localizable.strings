@@ -452,7 +452,9 @@
 "Reload Config" = "Reload Config";
 
 /* No comment provided by engineer. */
-"Update External Resources" = "Update External Resources";
+"Update Rule and Proxy Resources" = "Update Rule and Proxy Resources";
+
+"Config Patch (Profile Mixin)" = "Config Patch (Profile Mixin)";
 
 /* No comment provided by engineer. */
 "Remote Config" = "Remote Config";
@@ -477,6 +479,11 @@
 
 /* No comment provided by engineer. */
 "Show Net Speed" = "Show Net Speed";
+
+"Show Proxy Speed" = "Show ClashFX Proxy Speed";
+"Shows traffic that passes through ClashFX's local proxy or Enhanced Mode, not total system traffic." = "Shows traffic that passes through ClashFX's local proxy or Enhanced Mode, not total system traffic.";
+"Hide Dock Icon" = "Hide Dock Icon";
+"When enabled, ClashFX is available only from the menu bar." = "When enabled, ClashFX is available only from the menu bar.";
 
 /* No comment provided by engineer. */
 "Allow from LAN" = "Allow from LAN";
@@ -516,6 +523,9 @@
 "Advanced TUN Settings…" = "Advanced TUN Settings…";
 "Advanced TUN Settings" = "Advanced TUN Settings";
 "MTU 1500 matches the real internet path; 4064 is the macOS utun ceiling. Pinning Interface avoids the macOS sleep/wake auto-detect bug. Toggle Enhanced Mode off then on to apply." = "MTU 1500 matches the real internet path; 4064 is the macOS utun ceiling. Pinning Interface avoids the macOS sleep/wake auto-detect bug. Toggle Enhanced Mode off then on to apply.";
+"MTU 1500 matches the real internet path; 4064 is the macOS utun ceiling. Pinning Interface avoids the macOS sleep/wake auto-detect bug. Use Custom Config keeps your config file as-is; Enhanced Mode still verifies TUN and applies macOS DNS override. Toggle Enhanced Mode off then on to apply." = "MTU 1500 matches the real internet path; 4064 is the macOS utun ceiling. Pinning Interface avoids the macOS sleep/wake auto-detect bug. Use Custom Config keeps your config file as-is; Enhanced Mode still verifies TUN and applies macOS DNS override. Toggle Enhanced Mode off then on to apply.";
+"Use Custom Config as-is" = "Use Custom Config as-is";
+"Requires your config to define tun, DNS hijack/fake-ip DNS, external-controller, and LAN binding correctly. ClashFX will still apply and restore macOS DNS while Enhanced Mode is on." = "Requires your config to define tun, DNS hijack/fake-ip DNS, external-controller, and LAN binding correctly. ClashFX will still apply and restore macOS DNS while Enhanced Mode is on.";
 "Apply" = "Apply";
 "TUN MTU (%d–%d):" = "TUN MTU (%d–%d):";
 "Interface (empty = auto-detect):" = "Interface (empty = auto-detect):";
@@ -558,8 +568,23 @@
 "Open Download Page" = "Open Download Page";
 "Local development build" = "Local development build";
 
+/* Turn Off All Proxy Modes */
+"Turn Off All Proxy Modes" = "Turn Off All Proxy Modes";
+"Disable System Proxy and Enhanced Mode together" = "Disable System Proxy and Enhanced Mode together";
+
 /* Bypass Common Chinese Apps */
 "Bypass Common Chinese Apps" = "Bypass Common Chinese Apps";
 
 /* Requires Enhanced Mode (uses PROCESS-NAME rules) */
 "Requires Enhanced Mode (uses PROCESS-NAME rules)" = "Requires Enhanced Mode (uses PROCESS-NAME rules)";
+
+/* Settings sidebar */
+"Settings" = "Settings";
+"Global Shortcut" = "Shortcuts";
+"Debug" = "Debug";
+"Application Settings" = "Application Settings";
+"Network Automation" = "Network Automation";
+"Connectivity Test" = "Connectivity Test";
+"Bypass Rules" = "Bypass Rules";
+"Global Shortcut Updated" = "Global Shortcut Updated";
+"Copy shortcuts were changed to avoid intercepting Command-C. You can customize them in Settings > Global Shortcut." = "Copy shortcuts were changed to avoid intercepting Command-C. You can customize them in Settings > Global Shortcut.";

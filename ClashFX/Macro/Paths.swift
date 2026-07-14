@@ -4,7 +4,9 @@ let kConfigFolderPath = "\(NSHomeDirectory())/.config/clashfx/"
 let kLegacyConfigFolderPath = "\(NSHomeDirectory())/.config/clash/"
 
 let kDefaultConfigFilePath = "\(kConfigFolderPath)config.yaml"
-let kProfileMixinFilePath = "\(kConfigFolderPath).profile_mixin.yaml"
+let kProfileMixinFileName = ".profile_mixin.yaml"
+let kICloudProfileMixinFileName = "Profile Mixin.yaml"
+let kProfileMixinFilePath = "\(kConfigFolderPath)\(kProfileMixinFileName)"
 
 enum Paths {
     static func localConfigPath(for name: String) -> String {
@@ -16,7 +18,25 @@ enum Paths {
     }
 
     static var profileMixinPath: String {
+        if ICloudManager.shared.useiCloud.value,
+           var url = FileManager.default.url(forUbiquityContainerIdentifier: nil) {
+            url.appendPathComponent("Documents")
+            try? FileManager.default.createDirectory(at: url, withIntermediateDirectories: true, attributes: nil)
+            return iCloudProfileMixinURL(in: url).path
+        }
         return kProfileMixinFilePath
+    }
+
+    static func iCloudProfileMixinURL(in documentsURL: URL) -> URL {
+        documentsURL.appendingPathComponent(kICloudProfileMixinFileName)
+    }
+
+    static func legacyICloudProfileMixinURL(in documentsURL: URL) -> URL {
+        documentsURL.appendingPathComponent(kProfileMixinFileName)
+    }
+
+    static func isProfileMixinFileName(_ fileName: String) -> Bool {
+        fileName == kProfileMixinFileName || fileName == kICloudProfileMixinFileName
     }
 
     static func migrateFromLegacyIfNeeded() {

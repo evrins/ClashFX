@@ -217,6 +217,9 @@ enum Settings {
         }
     }
 
+    @UserDefault("hideDockIcon", defaultValue: false)
+    static var hideDockIcon: Bool
+
     @UserDefault("kDisableRestoreProxy", defaultValue: false)
     static var disableRestoreProxy: Bool
 
