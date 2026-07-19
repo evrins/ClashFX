@@ -18,7 +18,7 @@ curl -LO https://github.com/Dreamacro/maxmind-geoip/releases/latest/download/Cou
 gzip Country.mmdb
 mv Country.mmdb.gz ./ClashFX/Resources/Country.mmdb.gz
 echo "install dashboard"
-tag="v3.13.1"
+tag="v3.15.0"
 cd ClashFX/Resources
 rm -rf dist.zip dist dashboard
 curl -LO "https://github.com/Zephyruso/zashboard/releases/download/$tag/dist.zip"
