@@ -17,6 +17,7 @@ ClashFX/goClash/mihomo_core
 fastlane/report.xml
 ClashFX/Resources/Country.mmdb.gz
 ClashFX/Resources/dist.zip
+ClashFX/Resources/dashboard
 .bundle/config
 *.app/**
 ClashFX.app.dSYM.zip
