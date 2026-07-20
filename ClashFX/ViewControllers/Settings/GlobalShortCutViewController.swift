@@ -48,59 +48,78 @@ extension KeyboardShortcuts.Name {
 enum KeyboardShortCutManager {
     private static let copyShortcutMigrationKey = "kCopyShortcutMigrationV2"
     private static let unsafeCommandShortcutMigrationKey = "kUnsafeCommandShortcutMigrationV1"
+    private static var localKeyUpMonitor: Any?
+    private typealias ShortcutHandler = () -> Void
 
     static func setup() {
         migrateUnsafeCopyShortcutsIfNeeded()
         migrateUnsafeCommandShortcutsIfNeeded()
 
-        KeyboardShortcuts.onKeyUp(for: .toggleSystemProxyMode) {
-            AppDelegate.shared.actionSetSystemProxy(nil)
+        guard localKeyUpMonitor == nil else { return }
+
+        localKeyUpMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyUp) { event in
+            handleKeyUp(event) ? nil : event
+        }
+    }
+
+    private static func handleKeyUp(_ event: NSEvent) -> Bool {
+        guard NSApp.isActive, let eventShortcut = KeyboardShortcuts.Shortcut(event: event) else {
+            return false
         }
 
-        KeyboardShortcuts.onKeyUp(for: .copyShellCommand) {
-            AppDelegate.shared.actionCopyExportCommand(AppDelegate.shared.copyExportCommandMenuItem)
+        for (name, handler) in shortcutHandlers()
+            where KeyboardShortcuts.getShortcut(for: name) == eventShortcut {
+            handler()
+            return true
         }
 
-        KeyboardShortcuts.onKeyUp(for: .copyExternalShellCommand) {
-            AppDelegate.shared.actionCopyExportCommand(AppDelegate.shared.copyExportCommandExternalMenuItem)
-        }
+        return false
+    }
 
-        KeyboardShortcuts.onKeyUp(for: .modeDirect) {
-            AppDelegate.shared.switchProxyMode(mode: .direct)
-        }
+    private static func shortcutHandlers() -> [(KeyboardShortcuts.Name, ShortcutHandler)] {
+        var handlers: [(KeyboardShortcuts.Name, ShortcutHandler)] = [
+            (.toggleSystemProxyMode, {
+                AppDelegate.shared.actionSetSystemProxy(nil)
+            }),
+            (.copyShellCommand, {
+                AppDelegate.shared.actionCopyExportCommand(AppDelegate.shared.copyExportCommandMenuItem)
+            }),
+            (.copyExternalShellCommand, {
+                AppDelegate.shared.actionCopyExportCommand(AppDelegate.shared.copyExportCommandExternalMenuItem)
+            }),
+            (.modeDirect, {
+                AppDelegate.shared.switchProxyMode(mode: .direct)
+            }),
+            (.modeRule, {
+                AppDelegate.shared.switchProxyMode(mode: .rule)
+            }),
+            (.modeGlobal, {
+                AppDelegate.shared.switchProxyMode(mode: .global)
+            }),
+            (.toggleEnhancedMode, {
+                AppDelegate.shared.actionToggleEnhancedMode(nil)
+            }),
+            (.log, {
+                AppDelegate.shared.actionShowLog(nil)
+            }),
+            (.dashboard, {
+                AppDelegate.shared.actionDashboard(nil)
+            }),
+            (.benchmark, {
+                AppDelegate.shared.actionSpeedTest(AppDelegate.shared)
+            }),
+            (.openMenu, {
+                AppDelegate.shared.statusItem.button?.performClick(nil)
+            })
+        ]
 
-        KeyboardShortcuts.onKeyUp(for: .modeRule) {
-            AppDelegate.shared.switchProxyMode(mode: .rule)
-        }
-
-        KeyboardShortcuts.onKeyUp(for: .modeGlobal) {
-            AppDelegate.shared.switchProxyMode(mode: .global)
-        }
-
-        KeyboardShortcuts.onKeyUp(for: .toggleEnhancedMode) {
-            AppDelegate.shared.actionToggleEnhancedMode(nil)
-        }
-
-        KeyboardShortcuts.onKeyUp(for: .log) {
-            AppDelegate.shared.actionShowLog(nil)
-        }
-
-        KeyboardShortcuts.onKeyUp(for: .dashboard) {
-            AppDelegate.shared.actionDashboard(nil)
-        }
-
-        KeyboardShortcuts.onKeyUp(for: .benchmark) {
-            AppDelegate.shared.actionSpeedTest(AppDelegate.shared)
-        }
-
-        KeyboardShortcuts.onKeyUp(for: .openMenu) {
-            AppDelegate.shared.statusItem.button?.performClick(nil)
-        }
         if #available(macOS 10.15, *) {
-            KeyboardShortcuts.onKeyUp(for: .nativeDashboard) {
-                ClashWindowController<DashboardViewController>.create().showWindow(self)
-            }
+            handlers.append((.nativeDashboard, {
+                ClashWindowController<DashboardViewController>.create().showWindow(nil)
+            }))
         }
+
+        return handlers
     }
 
     private static func migrateUnsafeCopyShortcutsIfNeeded() {
